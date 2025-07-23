@@ -1,0 +1,2885 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exportar Ventas a CSV</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest"
+          href="data:application/json;base64,eyJuYW1lIjoiU2lzdGVtYSBkZSBMb3RlcmlhIiwic2hvcnRfbmFtZSI6IkxvdGVyaWEiLCJzdGFydF91cmwiOiIvIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiIzAwN2JmZiJ9">
+    <title>Sistema de Lotería</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+    :root {
+        --main-button-color: #ffb347;
+        --button-hover-color: #ffa533;
+    }
+
+    body {
+        min-height: 100vh;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 10px;
+        background-color: #fff;
+        display: flex;
+        justify-content: center; /* horizontal center */
+        align-items: center;
+    }
+
+    #loginPage {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    .container {
+        border: 1px solid #ccc;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: #ffffff;
+        margin: 0 auto;
+        max-width: 800px;
+    }
+
+    .input-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .input-group {
+        width: 100%;
+    }
+
+    .input-group select,
+    .input-group input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 16px;
+        background-color: #ffffff;
+        box-sizing: border-box;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        background-color: #e0e0e0;
+        color: #333;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-bottom: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #d0d0d0;
+    }
+
+    .ticket-preview {
+        background: white;
+        padding: 20px;
+        max-width: 400px;
+        margin: 20px auto;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .ticket-content {
+        padding: 15px;
+    }
+
+    .ticket-header {
+        font-size: 2em;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .ticket-info {
+        font-size: 1.2em;
+    }
+
+    .ticket-numbers p {
+        font-family: monospace;
+        font-size: 2.0em !important;
+        margin: 10px 0;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .ticket-total {
+        font-size: 1.8em;
+        font-weight: bold;
+        text-align: center;
+        margin: 15px 0;
+    }
+
+    #qrcode {
+        margin: 20px auto;
+        text-align: center;
+        padding: 15px;
+        background: white;
+    }
+
+    .total {
+        font-size: 1.3em;
+        font-weight: bold;
+        margin: 15px 0;
+        text-align: center;
+    }
+
+    .scanner-container {
+        margin-top: 20px;
+        display: none;
+    }
+
+    .ticket-item {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+    }
+
+    .ticket-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    /* Nuevos estilos para los botones de editar y eliminar */
+    .ticket-actions button {
+        padding: 5px 10px; /* Tamaño más pequeño */
+        font-size: 12px;   /* Texto más pequeño */
+        margin: 2px;       /* Espaciado entre botones */
+        border-radius: 4px; /* Bordes redondeados */
+        background-color: var(--main-button-color); /* Color principal */
+        color: white;      /* Texto en blanco */
+        border: none;      /* Sin borde */
+        cursor: pointer;   /* Cursor de mano */
+        transition: background-color 0.3s; /* Transición suave */
+    }
+
+    .ticket-actions button:hover {
+        background-color: var(--button-hover-color); /* Color al pasar el mouse */
+    }
+
+    /* Estilos específicos para el botón de eliminar */
+    .ticket-actions button:last-child {
+        background-color: #ff4d4d; /* Color rojo para el botón de eliminar */
+    }
+
+    .ticket-actions button:last-child:hover {
+        background-color: #cc0000; /* Color rojo oscuro al pasar el mouse */
+    }
+
+    /* Estilos para la tabla */
+    #numbersList table {
+        width: 100%;
+        border-collapse: collapse; /* Elimina el espacio entre celdas */
+    }
+
+    /* Estilos para el logo con imagen */
+.ticket-logo {
+    width: 120px;
+    height: 80px;
+    margin: 10px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ticket-logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+    #numbersList th,
+    #numbersList td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd; /* Línea divisoria entre filas */
+    }
+
+    #numbersList th {
+        background-color: #f2f2f2; /* Fondo gris claro para el encabezado */
+    }
+
+    /* Ajustar el ancho de las columnas */
+    #numbersList td:nth-child(1) { width: 30%; } /* Columna del número */
+    #numbersList td:nth-child(2) { width: 20%; } /* Columna de los tiempos */
+    #numbersList td:nth-child(3) { width: 20%; } /* Columna del subtotal */
+    #numbersList td:nth-child(4) { width: 30%; } /* Columna de los botones */
+        /* Estilos para la cuadrícula de tiempos vendidos */
+      /* Estilos para la cuadrícula de tiempos vendidos (mantener en 5 columnas) */
+    #numberSalesGrid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr); /* 5 columnas para tiempos vendidos */
+        gap: 1px; /* Espacio entre los números */
+        border: 1px solid #ccc; /* Borde exterior de la cuadrícula */
+        background-color: #ccc; /* Color de fondo para las líneas de la cuadrícula */
+    }
+
+    /* Estilos para la cuadrícula de billetes vendidos (cambiar a 4 columnas) */
+    #billetesSalesGrid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 4 columnas para billetes vendidos */
+        gap: 1px; /* Espacio entre los números */
+        border: 1px solid #ccc; /* Borde exterior de la cuadrícula */
+        background-color: #ccc; /* Color de fondo para las líneas de la cuadrícula */
+    }
+
+    /* Estilos comunes para los items */
+    .number-item, .billete-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px; /* Reducir el padding */
+        background-color: #ffffff; /* Fondo blanco para cada celda */
+        border: 1px solid #ccc; /* Borde para cada celda */
+    }
+
+    .number-item span, .billete-item span {
+        font-size: 0.9em; /* Reducir el tamaño de la fuente */
+        font-weight: bold;
+    }
+
+    .number-item span:first-child, .billete-item span:first-child {
+        color: #000000; /* Color negro para el número */
+    }
+
+    .number-item span:last-child, .billete-item span:last-child {
+        color: red; /* Color rojo para los tiempos vendidos */
+    }
+
+    .number-item.highlight, .billete-item.highlight {
+        background-color: #e0f7ff; /* Azul claro */
+    }
+        /* Estilos para las pestañas */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .tab-button.active {
+            border-bottom: 2px solid #1890ff;
+            font-weight: bold;
+        }
+
+        .info-text {
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+    .ticket-item p {
+        margin: 5px 0; /* Espaciado entre los párrafos */
+        font-size: 14px; /* Tamaño de fuente */
+    }
+
+    .ticket-item strong {
+        color: #333; /* Color del texto en negrita */
+    }
+    </style>
+</head>
+<body>
+
+<div id="loginPage" style="display: none;">
+  <h2>Ingrese contraseña de la app:</h2>
+  <div class="input-group">
+      <input type="password" id="passwordInput" placeholder="Contraseña" />
+      <button onclick="checkPassword()">Confirmar</button>
+  </div>
+  <p id="error" style="color:red;"></p>
+</div>
+
+<div id="mainPage" class="container" style="display: none;">
+    <!-- Fecha y hora actual -->
+    <div id="datetime" style="text-align: right; margin-bottom: 15px; font-size: 1.1em;"></div>
+    <!-- Campo para el nombre del cliente -->
+    <div class="input-group" style="margin-bottom: 15px;">
+        <input type="text" id="customerName" placeholder="Nombre del Cliente">
+    </div>
+
+    <!-- Selección de lotería y hora en una fila -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <div class="input-group">
+            <select id="lotteryType" onchange="updateDrawTimes()">
+                <option value="">Elegir loteria</option>
+                <option value="PANAMA">LOTERIA PANAMA</option>
+                <option value="NICA">NICA</option>
+                <option value="MONAZO">MONAZO</option>
+                <option value="LAPRIMERA">LAPRIMERA</option>
+                <option value="TICA">TICA</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <select id="drawTimeSelect" disabled>
+                <option value="">Hora de sorteo</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Número y pedazos en una fila -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <div class="input-group">
+            <input type="number" id="number" placeholder="NUMERO">
+        </div>
+        <div class="input-group">
+            <input type="number" id="pieces" placeholder="TIEMPOS">
+        </div>
+    </div>
+    <button onclick="addNumber()">AGREGAR</button>
+
+    <!-- Agregar este bloque justo después del campo de pedazos en la página principal -->
+    <div style="margin-top: 15px; margin-bottom: 15px;">
+        <label for="quickInput" style="display: block; margin-bottom: 5px; font-weight: bold;">Entrada
+            Rápida:</label>
+        <div style="display: flex; gap: 10px;">
+            <div class="input-group" style="flex-grow: 1;">
+                <input type="text" id="quickInput" placeholder="Ej: 39,9 o 45,2 o 12,5">
+            </div>
+            <button onclick="processQuickInput()" style="width: auto; padding: 12px 20px;">
+                Procesar
+            </button>
+        </div>
+        <div style="font-size: 0.85em; color: #666; margin-top: 5px;">
+        </div>
+    </div>
+
+    <div id="numbersList">
+        <table style="width: 100%">
+            <thead>
+            <tr>
+                <th>NUMERO</th>
+                <th>CANT</th>
+                <th>SUB TOTAL</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody id="numbersTableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="totalValue" class="total">VALOR DE TICKET: 0.00$</div>
+
+    <button onclick="generateTicket()">GENERAR TICKET</button>
+    <button onclick="showSalesPage()">VER VENTAS</button>
+    <button onclick="showNumberSalesPage()">TIEMPOS VENDIDOS</button>
+    <button onclick="showVerifyWinnersPage()">Verificar Ganadores</button>
+
+    <div id="ticketPreview" class="ticket-preview">
+        <!-- Logo con imagen URL de Imgur -->
+        <div class="ticket-logo">
+            <img src="data:image/png;base64,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2cQawP3FlMyQbR84wX7weW/1PmSdTsLsCSmRpun9xk8Psm0bQ73n+cFn/TCSToIk6QDgM06l1srjonlnFL8H4B/yvAcREREREVFZzc3O5xLT/UEeF92llfP1iYiIiIiIyiqXjqdAzoHi3Oz8cp7XJyIiIiIiKrFWXhfOO6MI5BjlEhERERERlViQ14VlBIotCfcgIiIiIiIqGzNLT3tyi3KJiIiIiIhKzOhAcVnCPYiIiIiIiMokmZudb+V1cZaeEhERERERmSfXXjC5B4q9KJennxIREREREYljdqDYw86nRERERERE4uTaC0ZWoLgi6T5ERERERERlwIwiERERERERfWZudp6BIhEREREREd23nPcNpASKbGhDREREREQkTO6JOFkZRYBZRSIiIiIiIhFybWQDyA0U2dCGiIiIiIiof8woEhERERER0WfybmQDMFAkIiIiIiIyybKMm0gLFHsNbVqy7kdERERERFRAUrb0ycwoAswqEhERERER9UNKTCU7UGRDGyIiIiIiouNblnETZhSJiIiIiIjM0JqbnZdyPr3UQHFudn5Z5v2IiIiIiIgKZFnWjWRnFAGJfzkiIiIiIqICCWTdSEWgyPJTIiIiIiKio1uWdSMVgSIb2hARERERER1NMjc7Ly3pxtJTIiIiIiIi/UmtzJQeKPa69LRk35eIiIiIiMhgUiszVWQUAWYViYiIiIiIjmJZ5s1UBYrcp0hERERERHRIso8aZEaRiIiIiIhIb8uyb6gkUJybnW+B+xSJiIiIiIgOQ3pFpqqMIsCsIhERERER0WEsy76hykCR+xSJiIiIiIgeQvb+RIAZRSIiIiIiIp0tq7ipskCR+xSJiIiIiIgeSkklpsqMIsCsIhERERER0UGWVdxUdaDIfYpERERERET7ULE/EVAfKL6j+P5ERERERES6UhYvKQ0U52bnEwC3VY6BiIiIiIhIU8oqMFVnFAHuUyQiIiIiItrLsqob6xAoLqoeABERERERkWZac7PzyqovlQeKqjZnEhERERERaWxZ5c2VB4o9bGpDRERERET0GaUnROgSKPKYDCIiIiIios8oTabpEigyo0hERERERNR1u3dChDJaBIpzs/MtAC3FwyAiIiIiItKB8oafWgSKPcwqEhERERERaRAb6RQocp8iERERERGVXaLyWIyMNoHi3Oy88qiZiIiI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" alt="Los Tios Logo">
+        </div>
+        <div class="ticket-header">TICKET NO VALIDO</div>
+        <div id="ticketContent" class="ticket-content"></div>
+        <div id="qrcode"></div>
+        <div class="ticket-actions">
+            <button onclick="compartirTicket()">COMPARTIR TICKET</button>
+            <button onclick="closeTicket()">CERRAR</button>
+        </div>
+    </div>
+</div>
+
+<!-- Página de Ventas -->
+<div id="salesPage" class="container" style="display: none;">
+    <h2>Registro de Ventas</h2>
+    <div style="margin-bottom: 20px;">
+        <h3>Buscar tickets</h3>
+    </div>
+    <div class="input-group">
+        <input type="text" id="searchInput" placeholder="Buscar por ID de ticket">
+        <button onclick="searchTickets()">Buscar</button>
+        <button onclick="toggleScanner()">ESCANEAR QR</button>
+    </div>
+    <div class="scanner-container" id="scannerContainer">
+        <div id="reader"></div>
+    </div>
+    <button onclick="showMainPage()">Volver</button>
+
+    <div class="sales-summary">
+        <h3>Resumen de Ventas</h3>
+        <div class="date-selector">
+            <input type="date" id="salesDate" onchange="showSalesByDate(this.value)">
+            <button onclick="showTodaySales()">Ver Ventas de Hoy</button>
+            <button onclick="deleteSalesByDate()" style="background-color: #ff4d4d; color: white;">
+                Borrar Ventas del Día Seleccionado
+            </button>
+        </div>
+        <div class="sales-stats">
+            <p><strong>Fecha:</strong> <span id="currentSalesDate"></span></p>
+            <p><strong>Total Tickets:</strong> <span id="totalTickets">0</span></p>
+            <p><strong>Total Ventas:</strong> $<span id="totalSales">0.00</span></p>
+
+        </div>
+    </div>
+
+    <div id="ticketsList" class="ticket-list"></div>
+</div>
+
+<div id="numberSalesPage" class="container" style="display: none;">
+    <h2>TIEMPOS Y BILLETES VENDIDOS</h2>
+
+    <!-- Pestañas para alternar entre tiempos y billetes -->
+    <div class="tabs">
+        <button id="tiemposTab" class="tab-button active" onclick="switchTab('tiempos')">Tiempos
+            Vendidos
+        </button>
+        <button id="billetesTab" class="tab-button" onclick="switchTab('billetes')">Billetes
+            Vendidos
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <div class="input-group">
+            <select id="filterLotteryType" onchange="updateFilterDrawTimes()">
+                <option value="">Todas las Loterías</option>
+                <option value="PANAMA">LOTERIA PANAMA</option>
+                <option value="NICA">NICA</option>
+                <option value="MONAZO">MONAZO</option>
+                <option value="LAPRIMERA">LAPRIMERA</option>
+                <option value="TICA">TICA</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <select id="filterDrawTimeSelect" disabled>
+                <option value="">Todas las Horas</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Filtro por fecha -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+        <div class="input-group">
+            <input type="date" id="salesFilterDate" onchange="applyFilters()">
+        </div>
+        <button onclick="applyFilters()">Aplicar Filtros</button>
+    </div>
+
+    <!-- Contenedor para tiempos vendidos (2 cifras) -->
+    <div id="tiemposContainer">
+
+        <div id="numberSalesGrid">
+            <!-- Aquí se llenarán los números del 00 al 99 -->
+        </div>
+        <button onclick="shareReport('tiempos')" style="margin-top: 20px;">Compartir Reporte de
+            Tiempos
+        </button>
+    </div>
+
+    <!-- Contenedor para billetes vendidos (4 cifras) -->
+    <div id="billetesContainer" style="display: none;">
+
+        <div id="billetesSalesGrid">
+            <!-- Aquí se llenarán los billetes vendidos de 4 cifras -->
+        </div>
+        <button onclick="shareReport('billetes')" style="margin-top: 20px;">Compartir Reporte de
+            Billetes
+        </button>
+    </div>
+
+    <!-- Botón para volver a la página principal -->
+    <button onclick="showMainPage()" style="margin-top: 20px;">Volver</button>
+</div>
+
+<!-- Nueva página para verificar ganadores -->
+<!-- Página de verificar ganadores con estructura corregida -->
+<div id="verifyWinnersPage" class="container" style="display: none;">
+    <h2>Verificar Tickets Ganadores</h2>
+
+    <!-- Filtros -->
+    <div style="margin-bottom: 15px;">
+        <h3>Filtrar Tickets</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="input-group">
+                <input type="date" id="winnersFilterDate">
+            </div>
+            <div class="input-group">
+                <select id="filterLottery">
+                    <option value="">Todas las Loterías</option>
+                    <option value="PANAMA">LOTERIA PANAMA</option>
+                    <option value="NICA">NICA</option>
+                    <option value="MONAZO">MONAZO</option>
+                    <option value="LAPRIMERA">LAPRIMERA</option>
+                    <option value="TICA">TICA</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <select id="filterDrawTime" disabled>
+                    <option value="">Todas las Horas</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campos para ingresar los números ganadores -->
+    <div style="margin-bottom: 15px;">
+        <h3>Números Ganadores</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="input-group">
+                <input type="number" id="firstPrize" placeholder="1er Premio" inputmode="numeric"
+                       pattern="[0-9]*">
+            </div>
+            <div class="input-group">
+                <input type="number" id="secondPrize" placeholder="2do Premio" inputmode="numeric"
+                       pattern="[0-9]*">
+            </div>
+            <div class="input-group">
+                <input type="number" id="thirdPrize" placeholder="3er Premio" inputmode="numeric"
+                       pattern="[0-9]*">
+            </div>
+        </div>
+        <button onclick="checkWinningTickets()" style="margin-top: 15px;">Verificar Tickets
+            Ganadores
+        </button>
+    </div>
+    <button onclick="showConfigPage()">Configurar Límites</button>
+
+    <!-- Resultados de los tickets ganadores -->
+    <div id="winningTicketsResult" style="margin-top: 20px;"></div>
+
+    <!-- Botón para volver a la página principal -->
+    <button onclick="showMainPage()" style="margin-top: 20px;">Volver a Ventas</button>
+</div>
+
+
+<!-- Página de configuración de límites -->
+<div id="configPage" class="container" style="display: none;">
+    <h2>Configuración de Límites de Venta</h2>
+
+    <!-- Pestañas para alternar entre chances y billetes -->
+    <div class="tabs">
+        <button id="chancesLimitTab" class="tab-button active" onclick="switchLimitTab('chances')">
+            Límites de Chances (2 cifras)
+        </button>
+        <button id="billetesLimitTab" class="tab-button" onclick="switchLimitTab('billetes')">
+            Límites de Billetes (4 cifras)
+        </button>
+    </div>
+
+    <!-- Configuración de límites para chances (2 cifras) -->
+    <div id="chancesLimitContainer">
+        <div style="margin-bottom: 15px;">
+            <h3>Configuración de Límites para Chances (2 cifras)</h3>
+
+            <!-- Selector de lotería y hora -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div class="input-group">
+                    <select id="limitLotteryType" onchange="updateLimitDrawTimes()">
+                        <option value="">Elegir loteria</option>
+                        <option value="PANAMA">LOTERIA PANAMA</option>
+                        <option value="NICA">NICA</option>
+                        <option value="MONAZO">MONAZO</option>
+                        <option value="LAPRIMERA">LAPRIMERA</option>
+                        <option value="TICA">TICA</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <select id="limitDrawTimeSelect" disabled>
+                        <option value="">Hora de sorteo</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Configuración general para todos los números -->
+            <div style="margin-bottom: 15px;">
+                <h4>Límite Global para Todos los Números</h4>
+                <div class="input-group">
+                    <input type="number" id="globalChancesLimit"
+                           placeholder="Límite global para todos los números (ej: 100)" min="1">
+                </div>
+                <button onclick="setGlobalLimit('chances')" style="margin-top: 10px;">Aplicar Límite
+                    Global
+                </button>
+            </div>
+
+            <!-- Configuración individual -->
+            <div style="margin-bottom: 15px;">
+                <h4>Límite Individual por Número</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="input-group">
+                        <input type="number" id="chanceNumber" placeholder="Número (00-99)" min="0"
+                               max="99">
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="chanceLimit" placeholder="Límite de tiempos"
+                               min="0">
+                    </div>
+                </div>
+                <button onclick="setIndividualLimit('chances')" style="margin-top: 10px;">Aplicar
+                    Límite Individual
+                </button>
+            </div>
+
+            <!-- Visualización de límites actuales -->
+            <div style="margin-top: 20px;">
+                <h4>Límites Actuales</h4>
+                <div id="currentChancesLimits"
+                     style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+                    <!-- Aquí se mostrarán los límites actuales -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuración de límites para billetes (4 cifras) -->
+    <div id="billetesLimitContainer" style="display: none;">
+        <div style="margin-bottom: 15px;">
+            <h3>Configuración de Límites para Billetes (4 cifras)</h3>
+
+            <!-- Selector de lotería y hora -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div class="input-group">
+                    <select id="limitBilleteLotteryType" onchange="updateLimitBilleteDrawTimes()">
+                        <option value="">Elegir loteria</option>
+                        <option value="PANAMA">LOTERIA PANAMA</option>
+                        <option value="NICA">NICA</option>
+                        <option value="MONAZO">MONAZO</option>
+                        <option value="LAPRIMERA">LAPRIMERA</option>
+                        <option value="TICA">TICA</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <select id="limitBilleteDrawTimeSelect" disabled>
+                        <option value="">Hora de sorteo</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Configuración general para todos los billetes -->
+            <div style="margin-bottom: 15px;">
+                <h4>Límite Global para Todos los Billetes</h4>
+                <p class="info-text">Este límite se aplicará a cada número individualmente si no
+                    tiene un límite específico.</p>
+                <div class="input-group">
+                    <input type="number" id="globalBilletesLimit"
+                           placeholder="Límite global para todos los billetes (ej: 10)" min="1">
+                </div>
+                <button onclick="setGlobalLimit('billetes')" style="margin-top: 10px;">Aplicar
+                    Límite Global
+                </button>
+            </div>
+
+            <!-- Configuración individual para billetes -->
+            <div style="margin-bottom: 15px;">
+                <h4>Límite Individual por Billete</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="input-group">
+                        <input type="number" id="billeteNumber" placeholder="Número (0000-9999)"
+                               min="0" max="9999">
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="billeteLimit" placeholder="Límite de tiempos"
+                               min="0">
+                    </div>
+                </div>
+                <button onclick="setIndividualLimit('billetes')" style="margin-top: 10px;">Aplicar
+                    Límite Individual
+                </button>
+            </div>
+
+            <!-- Visualización de límites actuales para billetes -->
+            <div style="margin-top: 20px;">
+                <h4>Límites Actuales</h4>
+                <div id="currentBilletesLimits"
+                     style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+                    <!-- Aquí se mostrarán los límites actuales -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón para guardar configuración y volver -->
+    <button onclick="saveConfigAndReturn()" style="margin-top: 20px;">Guardar Configuración y
+        Volver
+    </button>
+</div>
+
+
+<script>
+    const PASSWORD = "12345";
+    const AUTH_KEY = "authenticated";
+
+    function checkPassword() {
+        const input = document.getElementById("passwordInput").value;
+        if (input === PASSWORD) {
+          localStorage.setItem(AUTH_KEY, "true");
+          showMainPage();
+        } else {
+          document.getElementById("error").innerText = "Contraseña incorrecta.";
+        }
+    }
+
+    // On page load
+    document.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem(AUTH_KEY) === "true") {
+            initApp();
+            showMainPage();
+        } else {
+            showLoginPage();
+        }
+    });
+
+    function showLoginPage() {
+        document.getElementById("loginPage").style.display = "block";
+
+        document.getElementById("passwordInput").addEventListener('input', () => {
+            document.getElementById("error").innerText = '';
+        });
+    }
+
+    // Cargar tickets desde localStorage
+    function loadTickets() {
+        const savedTickets = localStorage.getItem('lotteryTickets');
+        return savedTickets ? JSON.parse(savedTickets) : [];
+    }
+
+    // Función para convertir tickets a CSV
+    function convertTicketsToCSV(tickets) {
+        const headers = [
+            "ID",
+            "Fecha",
+            "Loteria",
+            "Hora de sorteo",
+            "Numero",
+            "Pedazos",
+            "Total",
+            "Pagado"
+        ];
+
+        // Crear un array para todas las filas
+        let allRows = [];
+
+        // Procesar cada ticket por separado
+        tickets.forEach(ticket => {
+            // Primera fila con todos los datos y el primer número/pedazo
+            const firstRow = [
+                ticket.id,
+                new Date(ticket.datetime).toLocaleString(),
+                ticket.lottery,
+                ticket.drawTime || "N/A",
+                ticket.numbers[0] ? ticket.numbers[0].number : "",
+                ticket.numbers[0] ? ticket.numbers[0].pieces : "",
+                ticket.total.toFixed(2),
+                ticket.paid ? "Si" : "No"
+            ];
+            allRows.push(firstRow);
+
+            // Filas adicionales con lotería y hora de sorteo repetidas
+            for (let i = 1; i < ticket.numbers.length; i++) {
+                const numberRow = [
+                    "", // ID vacío
+                    "", // Fecha vacía
+                    ticket.lottery, // Lotería repetida
+                    ticket.drawTime || "N/A", // Hora de sorteo repetida
+                    ticket.numbers[i].number, // Número
+                    ticket.numbers[i].pieces, // Pedazos
+                    "", // Total vacío
+                    "" // Pagado vacío
+                ];
+                allRows.push(numberRow);
+            }
+        });
+
+        // Unir encabezados y filas en un solo string CSV con comillas para evitar problemas
+        const csvContent = [
+            headers.join(","), // Encabezados
+            ...allRows.map(row => row.map(cell => `"${cell}"`).join(",")) // Filas con comillas
+        ].join("\n");
+
+        return csvContent;
+    }
+
+    // Función para descargar el archivo CSV
+    function downloadCSV(filename, csvContent) {
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = "hidden";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            alert("Tu navegador no soporta la descarga de archivos CSV.");
+        }
+    }
+
+    // Función para exportar las ventas a CSV
+    // Función modificada para exportar tickets con filtro de fecha opcional
+    function exportSalesToCSV(dateFilter = null) {
+        // Cargar todos los tickets
+        const allTickets = loadTickets();
+
+        // Si no hay tickets, mostrar mensaje y salir
+        if (allTickets.length === 0) {
+            alert("No hay ventas para exportar.");
+            return;
+        }
+
+        let ticketsToExport = allTickets;
+        let filename = `ventas_todas_${new Date().toISOString().split("T")[0]}.csv`;
+
+        // Si se proporcionó un filtro de fecha, aplicarlo
+        if (dateFilter) {
+            // Crear objetos Date para el inicio y fin del día seleccionado
+            const selectedDate = new Date(dateFilter + 'T00:00:00');
+            const endDate = new Date(dateFilter + 'T23:59:59');
+
+            // Filtrar tickets por la fecha seleccionada
+            ticketsToExport = allTickets.filter(ticket => {
+                const ticketDate = new Date(ticket.datetime);
+                return ticketDate >= selectedDate && ticketDate <= endDate;
+            });
+
+            // Si no hay tickets para esta fecha, mostrar mensaje y salir
+            if (ticketsToExport.length === 0) {
+                alert("No hay ventas para la fecha seleccionada.");
+                return;
+            }
+
+            // Nombre de archivo con la fecha seleccionada
+            filename = `ventas_${dateFilter}.csv`;
+        }
+
+        // Convertir a CSV y descargar
+        const csvContent = convertTicketsToCSV(ticketsToExport);
+        downloadCSV(filename, csvContent);
+    }
+
+    // Función para exportar las ventas del día seleccionado
+    function exportSelectedDaySales() {
+        const selectedDate = document.getElementById('salesDate').value;
+
+        if (!selectedDate) {
+            alert("Por favor, seleccione una fecha primero.");
+            return;
+        }
+
+        exportSalesToCSV(selectedDate);
+    }
+
+    // Variables globales
+    let numbers = [];
+    let tickets = [];
+
+    function updateDateTime() {
+        const now = new Date();
+        document.getElementById('datetime').textContent = now.toLocaleString();
+    }
+
+    const lotteryTimes = {
+        PANAMA: [],
+        NICA: ['12:00 PM', '4:00 PM', '10:00 PM'],
+        MONAZO: ['1:55 PM', '5:30 PM', '8:30 PM'],
+        LAPRIMERA: ['11:00 AM', '7:00 PM'],
+        TICA: ['8:30 PM']
+    };
+
+    // Inicializar
+    function initApp() {
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+        loadTickets();
+
+        // Inicializar límites y ventas actuales
+        initLimitsAndSales();
+    }
+
+    function updateDrawTimes() {
+        const lotteryType = document.getElementById('lotteryType').value;
+        const timeSelect = document.getElementById('drawTimeSelect');
+        timeSelect.innerHTML = '<option value="">Seleccione hora de sorteo</option>';
+
+        if (lotteryType && lotteryType !== 'PANAMA') {
+            timeSelect.disabled = false;
+            lotteryTimes[lotteryType].forEach(time => {
+                timeSelect.innerHTML += `<option value="${time}">${time}</option>`;
+            });
+        } else {
+            timeSelect.disabled = true;
+        }
+    }
+
+    function validateNumber(number) {
+        const numStr = number.toString();
+        return numStr.length === 2 || numStr.length === 4;
+    }
+
+    function calculatePrice(number, pieces, lotteryType, price2Digits = 0.20, price4Digits = 0.25) {
+    const numLength = number.toString().length;
+
+    // Si es lotería de Panamá
+    if (lotteryType === 'PANAMA') {
+        // En Panamá, los números de 4 cifras cuestan $1.00 por pieza
+        if (numLength === 4) {
+            return pieces * 1.00;
+        } else {
+            // En Panamá, los números de 2 cifras cuestan $0.25 por pieza
+            return pieces * 0.20;
+        }
+    } else {
+        // Para el resto de loterías (Nica, Monazo, La Primera, Tica)
+        if (numLength === 4) {
+            return pieces * price4Digits;
+        } else {
+            return pieces * price2Digits;
+        }
+    }
+}
+
+
+    function addNumber() {
+        const number = document.getElementById('number').value;
+        const pieces = parseInt(document.getElementById('pieces').value, 10);
+        const lotteryType = document.getElementById('lotteryType').value;
+
+        if (!number || !pieces) {
+            alert('Por favor ingrese número y cantidad de pedazos');
+            return;
+        }
+        if (!validateNumber(number)) {
+            alert('El número debe tener 2 o 4 cifras');
+            return;
+        }
+
+        // Verificar la lotería seleccionada
+        if (!lotteryType) {
+            alert('Por favor seleccione una lotería');
+            return;
+        }
+
+        // Verificar hora de sorteo para loterías que no sean PANAMA
+        if (lotteryType !== 'PANAMA') {
+            const drawTime = document.getElementById('drawTimeSelect').value;
+            if (!drawTime) {
+                alert('Por favor seleccione hora de sorteo');
+                return;
+            }
+        }
+
+        // Verificar límites antes de agregar el número
+        if (!checkLimits(number, pieces)) {
+            return; // Si no pasa la verificación de límites, no agregar el número
+        }
+
+        // Ahora pasamos el tipo de lotería a calculatePrice
+        const subTotal = calculatePrice(number, pieces, lotteryType);
+
+        // También debes guardar el tipo de lotería en el objeto
+        numbers.push({ number, pieces, subTotal, lotteryType });
+
+        updateNumbersList();
+        updateTotal();
+        // Actualizar el contador de ventas actuales para este número
+        updateCurrentSales(number, pieces, true); // true indica que es una adición
+        document.getElementById('number').value = '';
+        document.getElementById('pieces').value = '';
+    }
+
+    // Actualizar contador de ventas actuales
+    function updateCurrentSales(number, pieces, isAddition) {
+        const lotteryType = document.getElementById('lotteryType').value;
+        const drawTime = document.getElementById('drawTimeSelect').value || 'default';
+        const key = `${lotteryType}_${drawTime}`;
+
+        // Determinar si es un chance (2 cifras) o un billete (4 cifras)
+        const type = number.length === 2 ? 'chances' : 'billetes';
+
+        // Inicializar si no existe
+        if (!currentSales[type][key]) {
+            currentSales[type][key] = {};
+        }
+
+        if (!currentSales[type][key][number]) {
+            currentSales[type][key][number] = 0;
+        }
+
+        // Actualizar el contador (añadir o restar)
+        if (isAddition) {
+            currentSales[type][key][number] += pieces;
+        } else {
+            currentSales[type][key][number] -= pieces;
+            if (currentSales[type][key][number] < 0) {
+                currentSales[type][key][number] = 0; // Evitar valores negativos
+            }
+        }
+    }
+
+    function updateNumbersList() {
+        const tbody = document.getElementById('numbersTableBody');
+        tbody.innerHTML = '';
+
+        numbers.forEach((item, index) => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${item.number}</td>
+                <td><span id="pieces-${index}">${item.pieces}</span></td>
+                <td><span id="subTotal-${index}">$${item.subTotal.toFixed(2)}</span></td>
+                <td class="ticket-actions">
+                    <button onclick="editPieces(${index})">Edit</button>
+                    <button onclick="removeNumber(${index})">X</button>
+                </td>
+            `;
+        });
+    }
+
+    function editPieces(index) {
+        const oldPieces = numbers[index].pieces;
+        const number = numbers[index].number;
+        const newPieces = prompt("Ingrese la nueva cantidad de tiempos:", oldPieces);
+
+        if (newPieces !== null && !isNaN(newPieces)) {
+            const pieces = parseInt(newPieces, 10);
+
+            if (pieces > 0) {
+                // Calcular la diferencia para verificar límites
+                const difference = pieces - oldPieces;
+
+                if (difference > 0) {
+                    // Solo verificar límites si se está aumentando la cantidad
+                    if (!checkLimits(number, difference)) {
+                        return; // Si no pasa la verificación de límites, no hacer el cambio
+                    }
+                }
+
+                // Actualizar el contador de ventas actuales
+                updateCurrentSales(number, oldPieces, false); // Restar los tiempos viejos
+                updateCurrentSales(number, pieces, true); // Añadir los nuevos tiempos
+
+                // Actualizar los tiempos y el subtotal
+                numbers[index].pieces = pieces;
+                numbers[index].subTotal = calculatePrice(number, pieces);
+
+                // Actualizar la tabla y el total
+                updateNumbersList();
+                updateTotal();
+            } else {
+                alert("La cantidad de tiempos debe ser mayor que 0.");
+            }
+        } else {
+            alert("Por favor, ingrese un número válido.");
+        }
+    }
+
+    function removeNumber(index) {
+        // Obtener el número y la cantidad de pedazos antes de eliminar
+        const number = numbers[index].number;
+        const pieces = numbers[index].pieces;
+
+        // Eliminar de la lista
+        numbers.splice(index, 1);
+        updateNumbersList();
+        updateTotal();
+
+        // Actualizar el contador de ventas actuales para este número
+        updateCurrentSales(number, pieces, false); // false indica que es una eliminación
+    }
+
+    function updateTotal() {
+        const total = numbers.reduce((sum, item) => sum + item.subTotal, 0);
+        document.getElementById('totalValue').textContent = `VALOR DE TICKET: $${total.toFixed(2)}`;
+    }
+
+    function showSalesByDate(dateString) {
+        const selectedDate = new Date(dateString + 'T00:00:00');
+        const endDate = new Date(dateString + 'T23:59:59');
+
+        const tickets = loadTickets();
+        const dayTickets = tickets.filter(ticket => {
+            const ticketDate = new Date(ticket.datetime);
+            return ticketDate >= selectedDate && ticketDate <= endDate;
+        });
+
+        const totalAmount = dayTickets.reduce((sum, ticket) => sum + ticket.total, 0);
+
+        document.getElementById('currentSalesDate').textContent = selectedDate.toLocaleDateString('es-ES');
+        document.getElementById('totalTickets').textContent = dayTickets.length;
+        document.getElementById('totalSales').textContent = totalAmount.toFixed(2);
+
+        displayTickets(dayTickets);
+    }
+
+    function showTodaySales() {
+        const today = new Date();  // Obtiene la fecha y hora actuales
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');  // Los meses van de 0 a 11
+        const day = String(today.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;  // Formato YYYY-MM-DD
+        document.getElementById('salesDate').value = dateString;
+        showSalesByDate(dateString);
+    }
+    function generateTicket() {
+        // Validar que haya números en el ticket
+        if (numbers.length === 0) {
+            alert('Agregue números al ticket');
+            return;
+        }
+
+        // Obtener datos del formulario
+        const lotteryType = document.getElementById('lotteryType').value;
+        const drawTime = document.getElementById('drawTimeSelect').value;
+        const customerName = document.getElementById('customerName').value;
+
+        // Validaciones
+        if (!lotteryType) {
+            alert('Seleccione una lotería');
+            return;
+        }
+
+        if (lotteryType !== 'PANAMA' && !drawTime) {
+            alert('Seleccione hora de sorteo');
+            return;
+        }
+
+        // Agregar logs para depuración
+        console.log("Generando ticket con los siguientes datos:", {
+            lotería: lotteryType,
+            horaSorteo: drawTime,
+            cliente: customerName,
+            números: numbers
+        });
+
+        try {
+            // Crear ID único del ticket
+            const ticketId = Date.now().toString();
+
+            // Calcular el total correctamente (asegurando que subTotal sea un número)
+            const totalAmount = numbers.reduce((sum, item) => {
+                // Verificar que subTotal sea un número válido
+                const subTotal = typeof item.subTotal === 'number' ? item.subTotal : parseFloat(item.subTotal);
+                return sum + (isNaN(subTotal) ? 0 : subTotal);
+            }, 0);
+
+            // Crear objeto del ticket
+            const ticket = {
+                id: ticketId,
+                datetime: new Date().toISOString(),
+                lottery: lotteryType,
+                drawTime: drawTime,
+                numbers: JSON.parse(JSON.stringify(numbers)), // Clonar profundamente para evitar referencias
+                total: totalAmount,
+                paid: false, // Por defecto, el ticket no está pagado
+                customerName: customerName // Guardar el nombre del cliente
+            };
+
+            // Cargar tickets existentes
+            let tickets = loadTickets();
+
+            // Verificar que tickets sea un array
+            if (!Array.isArray(tickets)) {
+                console.error("Error: tickets no es un array válido");
+                tickets = [];
+            }
+
+            // Añadir nuevo ticket
+            tickets.push(ticket);
+
+            // Guardar en localStorage
+            try {
+                localStorage.setItem('lotteryTickets', JSON.stringify(tickets));
+                console.log("Ticket guardado con éxito:", ticket);
+
+                // Recalcular las ventas actuales después de generar el ticket
+                calculateCurrentSales();
+
+            } catch (storageError) {
+                console.error("Error al guardar en localStorage:", storageError);
+                alert("Error al guardar el ticket. Verifique el espacio disponible en su dispositivo.");
+                return;
+            }
+
+            // Mostrar vista previa del ticket
+            showTicketPreview(ticket);
+
+            // Resetear formulario
+            resetForm();
+
+        } catch (error) {
+            console.error("Error al generar el ticket:", error);
+            alert("Ha ocurrido un error al generar el ticket. Por favor, intente nuevamente.");
+        }
+    }
+    function resetForm() {
+        // NO resetear los selectores de lotería y hora de sorteo
+        // document.getElementById("lotteryType").selectedIndex = 0;
+        // document.getElementById("drawTimeSelect").selectedIndex = 0;
+        // document.getElementById("drawTimeSelect").disabled = true;
+
+        // Limpiar el campo de nombre del cliente
+        document.getElementById("customerName").value = "";
+
+        // Limpiar campos de número y pedazos
+        document.getElementById("number").value = "";
+        document.getElementById("pieces").value = "";
+        document.getElementById("quickInput").value = "";
+
+        // Limpiar la lista de números
+        numbers = [];
+        document.getElementById("numbersTableBody").innerHTML = ""; // Limpiar la tabla
+        document.getElementById("totalValue").innerText = "VALOR DE TICKET: 0.00$"; // Resetear el total
+    }
+
+    function showTicketPreview(ticket) {
+        const preview = document.getElementById('ticketPreview');
+        const content = document.getElementById('ticketContent');
+
+        const ticketTime = new Date(ticket.datetime);
+        const hours = ticketTime.getHours() % 12 || 12;
+        const minutes = ticketTime.getMinutes().toString().padStart(2, '0');
+        const ampm = ticketTime.getHours() >= 12 ? 'p. m.' : 'a. m.';
+        const timeString = `${hours}:${minutes}`;
+
+        content.innerHTML = `
+            <div class="ticket-info" style="text-align: center; line-height: 1.4;">
+                <p style="margin: 8px 0;"><strong>Fecha:</strong> ${ticketTime.toLocaleDateString('es-ES')}</p>
+                <p style="margin: 8px 0;"><strong>Hora venta:</strong> ${timeString} ${ampm}</p>
+                <p style="margin: 8px 0;"><strong>Loteria:</strong> ${ticket.lottery}</p>
+                ${ticket.drawTime ? `<p style="margin: 8px 0;"><strong>Hora sorteo:</strong> ${ticket.drawTime}</p>` : ''}
+                <p style="margin: 12px 0 6px 0;"><strong>ID Ticket:</strong></p>
+                <p style="margin: 6px 0;">${ticket.id}</p>
+            </div>
+            <div class="ticket-numbers" style="border-top: 1px solid black; border-bottom: 1px solid black; margin: 20px 0; padding: 20px 0;">
+                ${ticket.numbers.map(n => `
+                    <p style="font-family: monospace; font-size: 1.4em; margin: 10px 0; text-align: center;">*${n.number}*/${n.pieces}T/${n.subTotal.toFixed(2)}$</p>
+                `).join('')}
+            </div>
+          <div style="text-align: center;">
+    <p style="font-size: 1.6em; margin: 15px 0;"><strong>Total:</strong> ${ticket.total.toFixed(2)}$</p>
+    ${ticket.customerName ? `<p style="margin: 15px 0; font-size: 1.2em;"><strong>Cliente:</strong> ${ticket.customerName}</p>` : ''}
+    <p style="margin: 15px 0; font-size: 1.2em;">SIN TICKET NO HAY RECLAMO</p>
+    <p style="margin: 8px 0; font-size: 1.2em;">TICKET NO VALIDO</p>
+</div>
+`;
+
+        const qrDiv = document.getElementById('qrcode');
+        qrDiv.innerHTML = '';
+        new QRCode(qrDiv, {
+            text: ticket.id,
+            width: 150,
+            height: 150,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        preview.style.display = 'block';
+    }
+
+    function closeTicket() {
+        document.getElementById('ticketPreview').style.display = 'none';
+        numbers = [];
+        updateNumbersList();
+        updateTotal();
+    }
+
+    function loadTickets() {
+        const savedTickets = localStorage.getItem('lotteryTickets');
+        return savedTickets ? JSON.parse(savedTickets) : [];
+    }
+
+    function showSalesPage() {
+        // Ocultar todas las páginas excepto la de ventas
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('salesPage').style.display = 'block';
+        document.getElementById('numberSalesPage').style.display = 'none';
+        displayTickets(); // Actualizar la lista de tickets
+        showTodaySales(); // Mostrar las ventas de hoy
+    }
+
+    window.onload = function() {
+        // Reiniciar los valores de los elementos
+        document.getElementById('customerName').value = '';
+        document.getElementById('lotteryType').selectedIndex = 0;
+        document.getElementById('drawTimeSelect').selectedIndex = 0;
+        document.getElementById('drawTimeSelect').disabled = true;
+        document.getElementById('number').value = '';
+        document.getElementById('pieces').value = '';
+    };
+
+    function displayTickets(ticketsToShow = null) {
+        const ticketsList = document.getElementById('ticketsList');
+        const tickets = ticketsToShow || loadTickets();
+
+        ticketsList.innerHTML = tickets.map(ticket => `
+            <div class="ticket-item">
+                <p><strong>ID:</strong> ${ticket.id}</p>
+                <p><strong>Fecha:</strong> ${new Date(ticket.datetime).toLocaleString()}</p>
+                <p><strong>Lotería:</strong> ${ticket.lottery}</p>
+                ${ticket.customerName ? `<p><strong>Cliente:</strong> ${ticket.customerName}</p>` : ''}
+                <p><strong>Total:</strong> ${ticket.total.toFixed(2)}</p>
+                <p><strong>Estado:</strong> ${ticket.paid ? 'Pagado' : 'Pendiente'}</p>
+                <div class="ticket-actions">
+                    <button onclick="viewTicket('${ticket.id}')">Ver</button>
+                    <button onclick="deleteTicket('${ticket.id}')">clear</button>
+                    <button onclick="copyTicket('${ticket.id}')">copy</button>
+                    ${!ticket.paid ? `<button onclick="marcarComoPagado('${ticket.id}')">cobrar</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function viewTicket(ticketId) {
+        const tickets = loadTickets();
+        const ticket = tickets.find(t => t.id === ticketId);
+        if (ticket) {
+            showTicketPreview(ticket);
+            showMainPage();
+        }
+    }
+
+    function copyTicket(ticketId) {
+        const tickets = loadTickets();
+        const ticket = tickets.find(t => t.id === ticketId);
+
+        if (ticket) {
+            // Cargar los números del ticket en la variable global `numbers`
+            numbers = ticket.numbers.map(num => ({
+                number: num.number,
+                pieces: num.pieces,
+                subTotal: num.subTotal
+            }));
+
+            // Actualizar la lista de números en la interfaz
+            updateNumbersList();
+            updateTotal();
+
+            // Cambiar a la página principal
+            showMainPage();
+
+            // Mostrar un mensaje al usuario
+            alert("Los números del ticket han sido copiados. Cambia la lotería y la hora de sorteo antes de generar el nuevo ticket.");
+        } else {
+            alert("Ticket no encontrado.");
+        }
+    }
+
+    function deleteTicket(ticketId) {
+        if (confirm('¿Está seguro de eliminar este ticket?')) {
+            let tickets = loadTickets();
+            const ticketToDelete = tickets.find(t => t.id === ticketId);
+
+            if (ticketToDelete) {
+                // Eliminar el ticket
+                tickets = tickets.filter(t => t.id !== ticketId);
+                localStorage.setItem('lotteryTickets', JSON.stringify(tickets));
+                displayTickets();
+
+                // Recalcular las ventas actuales después de eliminar el ticket
+                calculateCurrentSales();
+
+                const currentDate = document.getElementById('salesDate').value;
+                if (currentDate) {
+                    showSalesByDate(currentDate);
+                }
+            } else {
+                alert('Ticket no encontrado.');
+            }
+        }
+    }
+
+    function searchTickets() {
+        const searchValue = document.getElementById('searchInput').value.toLowerCase();
+        const tickets = loadTickets();
+        const filteredTickets = tickets.filter(ticket =>
+            ticket.id.toLowerCase().includes(searchValue)
+        );
+        displayTickets(filteredTickets);
+    }
+
+   // Reemplaza la función compartirTicket() actual con esta:
+async function compartirTicket() {
+    try {
+        const ticketElement = document.getElementById('ticketPreview');
+        const actionButtons = ticketElement.querySelector('.ticket-actions');
+
+        // Ocultar botones temporalmente
+        actionButtons.style.display = 'none';
+
+        // Generar imagen del ticket
+        const canvas = await html2canvas(ticketElement, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            logging: false
+        });
+
+        // Mostrar botones nuevamente
+        actionButtons.style.display = 'flex';
+
+        // Detectar si estamos en Android WebView o navegador web
+        if (typeof Android !== 'undefined' && Android.shareTicketFromAndroid) {
+            // Está en la app de Android
+            const base64 = canvas.toDataURL('image/png');
+            Android.shareTicketFromAndroid(base64);
+        } else {
+            // Está en navegador web - usar Web Share API o descargar
+            await shareOnWeb(canvas);
+        }
+    } catch (error) {
+        console.error('Error al compartir:', error);
+        alert('No se pudo compartir el ticket. Intente de nuevo.');
+    }
+}
+
+// Nueva función para compartir en navegadores web
+async function shareOnWeb(canvas) {
+    try {
+        // Convertir canvas a blob
+        const blob = await new Promise(resolve => {
+            canvas.toBlob(resolve, 'image/png');
+        });
+
+        // Intentar usar Web Share API (funciona en móviles modernos)
+        if (navigator.share && navigator.canShare) {
+            const file = new File([blob], 'ticket-loteria.png', { type: 'image/png' });
+            
+            if (navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: 'BUENA SUERTE',
+                    text: 'GRACIAS POR SU COMPRA',
+                    files: [file]
+                });
+                return;
+            }
+        }
+
+        // Si Web Share API no funciona, descargar automáticamente
+        downloadTicketImage(canvas);
+        
+        // Mostrar instrucciones al usuario
+        alert('✅ Imagen descargada\n\nPuedes encontrar el ticket en tu carpeta de Descargas y compartirlo manualmente desde ahí.');
+        
+    } catch (error) {
+        console.error('Error en shareOnWeb:', error);
+        // Como último recurso, solo descargar
+        downloadTicketImage(canvas);
+        alert('Imagen del ticket descargada en tu dispositivo.');
+    }
+}
+
+// Función para descargar la imagen
+function downloadTicketImage(canvas) {
+    try {
+        // Crear enlace de descarga
+        const link = document.createElement('a');
+        const timestamp = new Date().getTime();
+        
+        link.download = `ticket-loteria-${timestamp}.png`;
+        link.href = canvas.toDataURL('image/png');
+        
+        // Trigger descarga
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Error al descargar:', error);
+        alert('No se pudo descargar la imagen del ticket.');
+    }
+}
+
+// Función alternativa: copiar al portapapeles (para dispositivos compatibles)
+async function copyTicketToClipboard(canvas) {
+    try {
+        const blob = await new Promise(resolve => {
+            canvas.toBlob(resolve, 'image/png');
+        });
+        
+        await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+        ]);
+        
+        alert('✅ Ticket copiado al portapapeles\n\nPuedes pegarlo en WhatsApp, Telegram, etc.');
+        return true;
+    } catch (error) {
+        console.error('Error al copiar:', error);
+        return false;
+    }
+}
+
+    let html5QrcodeScanner = null;
+
+    function toggleScanner() {
+        const scannerContainer = document.getElementById('scannerContainer');
+        if (scannerContainer.style.display === 'none' || !scannerContainer.style.display) {
+            scannerContainer.style.display = 'block';
+            iniciarEscaner();
+        } else {
+            scannerContainer.style.display = 'none';
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+        }
+    }
+
+    function verificarTicket(ticket) {
+        if (ticket.paid) {
+            alert('Este ticket ya ha sido pagado.');
+        } else {
+            if (confirm(`¿Marcar el ticket ${ticket.id} como pagado?`)) {
+                marcarComoPagado(ticket.id);
+            }
+        }
+    }
+
+    function marcarComoPagado(ticketId) {
+        let tickets = loadTickets();
+        const ticketIndex = tickets.findIndex(t => t.id === ticketId);
+        if (ticketIndex !== -1) {
+            tickets[ticketIndex].paid = true; // Marcamos como pagado
+            localStorage.setItem('lotteryTickets', JSON.stringify(tickets));
+            alert('Ticket marcado como pagado.');
+            displayTickets(); // Actualizamos la lista de tickets
+
+            // Como el ticket está pagado, ya no debería contar para los límites de venta
+            // así que recalculamos las ventas actuales
+            calculateCurrentSales();
+        } else {
+            alert('Ticket no encontrado.');
+        }
+    }
+
+    function showNumberSalesPage() {
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('salesPage').style.display = 'none';
+        document.getElementById('numberSalesPage').style.display = 'block';
+        document.getElementById('verifyWinnersPage').style.display = 'none';
+
+        // Establecer la fecha actual como valor por defecto si no hay fecha seleccionada
+        if (!document.getElementById('salesFilterDate').value) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('salesFilterDate').value = `${year}-${month}-${day}`;
+        }
+
+        updateNumberSalesTable(); // Actualizar la cuadrícula al mostrar la página
+    }
+
+    // Función para actualizar los tiempos de sorteo en los filtros
+    function updateFilterDrawTimes() {
+        const lotteryType = document.getElementById('filterLotteryType').value;
+        const timeSelect = document.getElementById('filterDrawTimeSelect');
+        timeSelect.innerHTML = '<option value="">Todas las Horas</option>';
+
+        if (lotteryType && lotteryType !== 'PANAMA') {
+            timeSelect.disabled = false;
+            lotteryTimes[lotteryType].forEach(time => {
+                timeSelect.innerHTML += `<option value="${time}">${time}</option>`;
+            });
+        } else {
+            timeSelect.disabled = true;
+        }
+    }
+
+    // Función para aplicar los filtros en la página de tiempos vendidos
+    function applyFilters() {
+        if (activeTab === 'tiempos') {
+            updateNumberSalesTable(); // Actualizar tabla de tiempos vendidos
+        } else {
+            updateBilletesSalesTable(); // Actualizar tabla de billetes vendidos
+        }
+    }
+
+    // Función para actualizar la cuadrícula de tiempos vendidos
+    // Función para actualizar la tabla de billetes vendidos
+    function updateBilletesSalesTable() {
+        const tickets = loadTickets();
+        const filterLottery = document.getElementById('filterLotteryType').value;
+        const filterTime = document.getElementById('filterDrawTimeSelect').value;
+        const filterDate = document.getElementById('salesFilterDate').value;
+
+        // Inicializar un objeto para contar los tiempos vendidos por billete
+        const billetesSales = {};
+
+        // Crear objetos Date para el rango del día seleccionado si hay un filtro de fecha
+        let selectedDateStart = null;
+        let selectedDateEnd = null;
+
+        if (filterDate) {
+            selectedDateStart = new Date(filterDate + 'T00:00:00');
+            selectedDateEnd = new Date(filterDate + 'T23:59:59');
+        }
+
+        // Filtrar y contar los billetes vendidos
+        tickets.forEach(ticket => {
+            // Convertir la fecha del ticket a un objeto Date para comparación
+            const ticketDate = new Date(ticket.datetime);
+
+            // Verificar si pasa los filtros
+            let passesFilters = true;
+
+            // Filtro de lotería
+            if (filterLottery && ticket.lottery !== filterLottery) {
+                passesFilters = false;
+            }
+
+            // Filtro de hora de sorteo
+            if (filterTime && ticket.drawTime !== filterTime) {
+                passesFilters = false;
+            }
+
+            // Filtro de fecha - comparar objetos Date para incluir horas
+            if (filterDate && (ticketDate < selectedDateStart || ticketDate > selectedDateEnd)) {
+                passesFilters = false;
+            }
+
+            // Si pasa todos los filtros, contar los billetes vendidos
+            if (passesFilters) {
+                ticket.numbers.forEach(num => {
+                    if (num.number.length === 4) { // Solo contar números de 4 cifras (billetes)
+                        if (!billetesSales[num.number]) {
+                            billetesSales[num.number] = 0;
+                        }
+                        billetesSales[num.number] += parseInt(num.pieces, 10);
+                    }
+                });
+            }
+        });
+
+        // Mostrar los resultados en la cuadrícula
+        const grid = document.getElementById('billetesSalesGrid');
+        grid.innerHTML = '';
+
+        // Ordenar los billetes por número para mostrarlos organizados
+        const sortedBilletes = Object.keys(billetesSales).sort();
+
+        // Verificar si no hay billetes para mostrar
+        if (sortedBilletes.length === 0) {
+            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;">No hay billetes vendidos con los filtros seleccionados</div>';
+            return;
+        }
+
+        // Recorrer los billetes y mostrarlos en la cuadrícula
+        sortedBilletes.forEach(billete => {
+            if (billetesSales[billete] > 0) {
+                const billeteItem = document.createElement('div');
+                billeteItem.className = 'billete-item highlight';
+                billeteItem.innerHTML = `
+                    <span>${billete}</span>
+                    <span>${billetesSales[billete]}</span>
+                `;
+                grid.appendChild(billeteItem);
+            }
+        });
+    }
+
+    // Actualizar la función de tiempos vendidos para mantener coherencia
+    function updateNumberSalesTable() {
+        const tickets = loadTickets();
+        const filterLottery = document.getElementById('filterLotteryType').value;
+        const filterTime = document.getElementById('filterDrawTimeSelect').value;
+        const filterDate = document.getElementById('salesFilterDate').value;
+
+        // Inicializar un objeto para contar los tiempos vendidos por número
+        const numberSales = {};
+        for (let i = 0; i <= 99; i++) {
+            const number = i.toString().padStart(2, '0'); // Formato 00, 01, ..., 99
+            numberSales[number] = 0; // Inicializar en 0 (número)
+        }
+
+        // Crear objetos Date para el rango del día seleccionado si hay un filtro de fecha
+        let selectedDateStart = null;
+        let selectedDateEnd = null;
+
+        if (filterDate) {
+            selectedDateStart = new Date(filterDate + 'T00:00:00');
+            selectedDateEnd = new Date(filterDate + 'T23:59:59');
+        }
+
+        // Filtrar y contar los tiempos vendidos
+        tickets.forEach(ticket => {
+            // Convertir la fecha del ticket a un objeto Date para comparación
+            const ticketDate = new Date(ticket.datetime);
+
+            // Verificar si pasa los filtros
+            let passesFilters = true;
+
+            // Filtro de lotería
+            if (filterLottery && ticket.lottery !== filterLottery) {
+                passesFilters = false;
+            }
+
+            // Filtro de hora de sorteo
+            if (filterTime && ticket.drawTime !== filterTime) {
+                passesFilters = false;
+            }
+
+            // Filtro de fecha - comparar objetos Date para incluir horas
+            if (filterDate && (ticketDate < selectedDateStart || ticketDate > selectedDateEnd)) {
+                passesFilters = false;
+            }
+
+            // Si pasa todos los filtros, contar los tiempos vendidos
+            if (passesFilters) {
+                ticket.numbers.forEach(num => {
+                    if (num.number.length === 2) { // Solo contar números de 2 cifras
+                        numberSales[num.number] += parseInt(num.pieces, 10);
+                    }
+                });
+            }
+        });
+
+        // Mostrar los resultados en la cuadrícula
+        const grid = document.getElementById('numberSalesGrid');
+        grid.innerHTML = '';
+
+        // Recorrer los números en orden numérico (00, 01, 02, ..., 99)
+        for (let i = 0; i <= 99; i++) {
+            const number = i.toString().padStart(2, '0'); // Formato 00, 01, ..., 99
+            const numberItem = document.createElement('div');
+            numberItem.className = 'number-item';
+
+            // Aplicar la clase "highlight" si el número tiene tiempos vendidos mayores a cero
+            if (numberSales[number] > 0) {
+                numberItem.classList.add('highlight');
+            }
+
+            numberItem.innerHTML = `
+                <span>${number}</span>
+                <span>${numberSales[number]}</span>
+            `;
+            grid.appendChild(numberItem);
+        }
+    }
+
+    function deleteSalesByDate() {
+        const selectedDate = document.getElementById('salesDate').value;
+
+        if (!selectedDate) {
+            alert("Por favor, seleccione una fecha primero.");
+            return;
+        }
+
+        if (confirm(`¿Está seguro de borrar todas las ventas del ${selectedDate}? Esta acción no se puede deshacer.`)) {
+            let tickets = loadTickets();
+
+            // Filtrar los tickets que NO coincidan con la fecha seleccionada
+            const filteredTickets = tickets.filter(ticket => {
+                const ticketDate = new Date(ticket.datetime).toISOString().split('T')[0];
+                return ticketDate !== selectedDate;
+            });
+
+            // Guardar los tickets filtrados en localStorage
+            localStorage.setItem('lotteryTickets', JSON.stringify(filteredTickets));
+
+            // Actualizar la lista de tickets
+            displayTickets();
+            showSalesByDate(selectedDate); // Actualizar el resumen de ventas
+
+            alert(`Todas las ventas del ${selectedDate} han sido borradas.`);
+        }
+    }
+
+    function processQuickInput() {
+        const input = document.getElementById('quickInput').value.trim();
+
+        if (!input) {
+            alert('Por favor ingrese al menos un número en formato "número,tiempos"');
+            return;
+        }
+
+        // Verificar la lotería seleccionada
+        const lotteryType = document.getElementById('lotteryType').value;
+        if (!lotteryType) {
+            alert('Por favor seleccione una lotería');
+            return;
+        }
+
+        // Verificar hora de sorteo para loterías que no sean PANAMA
+        if (lotteryType !== 'PANAMA') {
+            const drawTime = document.getElementById('drawTimeSelect').value;
+            if (!drawTime) {
+                alert('Por favor seleccione hora de sorteo');
+                return;
+            }
+        }
+
+        // Buscar todos los patrones que coincidan con "número,tiempos"
+        const matches = input.match(/\d+,\d+/g);
+
+        if (!matches || matches.length === 0) {
+            alert('No se encontraron números en formato válido (número,tiempos)');
+            return;
+        }
+
+        let processed = 0;
+
+        for (let i = 0; i < matches.length; i++) {
+            const match = matches[i];
+            // Separar el número y los tiempos
+            const [number, piecesStr] = match.split(',');
+
+            // Validar el número (debe tener 2 o 4 cifras)
+            if (validateNumber(number)) {
+                // Convertir tiempos a número
+                const pieces = parseInt(piecesStr, 10);
+
+                // Solo procesar si los tiempos son un número positivo
+                if (!isNaN(pieces) && pieces > 0) {
+                    // Verificar límites antes de agregar el número
+                    if (!checkLimits(number, pieces)) {
+                        continue; // Si no pasa la verificación de límites, pasar al siguiente número
+                    }
+
+                    // Calcular el subtotal
+                    const subTotal = calculatePrice(number, pieces);
+
+                    // Agregar a la lista de números
+                    numbers.push({ number, pieces, subTotal });
+    // Actualizar el contador de ventas actuales para este número
+                    updateCurrentSales(number, pieces, true); // true indica que es una adición
+
+                    processed++;
+                }
+            }
+        }
+
+        // Actualizar la tabla y el total si se procesó al menos un número
+        if (processed > 0) {
+            updateNumbersList();
+            updateTotal();
+            document.getElementById('quickInput').value = ''; // Limpiar el campo
+            alert(`Se procesaron ${processed} números correctamente.`);
+        } else if (matches.length > 0 && processed === 0) {
+            alert('No se pudieron procesar los números debido a los límites establecidos o formato incorrecto.');
+        } else {
+            alert('No se pudieron procesar los números. Asegúrese de que los números tengan 2 o 4 cifras y los tiempos sean valores positivos.');
+        }
+    }
+
+    function shareReport(type) {
+        const tickets = loadTickets();
+        const filterLottery = document.getElementById('filterLotteryType').value;
+        const filterTime = document.getElementById('filterDrawTimeSelect').value;
+        const filterDate = document.getElementById('salesFilterDate').value;
+
+        // Inicializar objetos para contar ventas
+        const sales = {};
+
+        // Crear objetos Date para el rango del día seleccionado si hay un filtro de fecha
+        let selectedDateStart = null;
+        let selectedDateEnd = null;
+
+        if (filterDate) {
+            selectedDateStart = new Date(filterDate + 'T00:00:00');
+            selectedDateEnd = new Date(filterDate + 'T23:59:59');
+        }
+
+        // Filtrar y contar ventas
+        tickets.forEach(ticket => {
+            // Convertir la fecha del ticket a un objeto Date para comparación
+            const ticketDate = new Date(ticket.datetime);
+
+            // Verificar si pasa los filtros
+            let passesFilters = true;
+
+            // Filtro de lotería
+            if (filterLottery && ticket.lottery !== filterLottery) {
+                passesFilters = false;
+            }
+
+            // Filtro de hora de sorteo
+            if (filterTime && ticket.drawTime !== filterTime) {
+                passesFilters = false;
+            }
+
+            // Filtro de fecha - comparar objetos Date para incluir horas
+            if (filterDate && (ticketDate < selectedDateStart || ticketDate > selectedDateEnd)) {
+                passesFilters = false;
+            }
+
+            // Si pasa todos los filtros, contar ventas
+            if (passesFilters) {
+                ticket.numbers.forEach(num => {
+                    // Para tiempos (2 cifras) o billetes (4 cifras) según el tipo
+                    if ((type === 'tiempos' && num.number.length === 2) ||
+                        (type === 'billetes' && num.number.length === 4)) {
+                        if (!sales[num.number]) {
+                            sales[num.number] = 0;
+                        }
+                        sales[num.number] += parseInt(num.pieces, 10);
+                    }
+                });
+            }
+        });
+
+        // Crear el contenido del reporte
+        let reportContent = `Reporte de ${type === 'tiempos' ? 'Tiempos' : 'Billetes'} Vendidos\n`;
+        reportContent += `Lotería: ${filterLottery || 'Todas'}\n`;
+        reportContent += `Hora de Sorteo: ${filterTime || 'Todas'}\n`;
+        reportContent += `Fecha: ${filterDate || 'Todas'}\n\n`;
+        reportContent += type === 'tiempos' ? "Número,Tiempos Vendidos\n" : "Billete,Cantidad Vendida\n";
+
+        // Agregar números/billetes con cantidades vendidas mayores a cero
+        const sortedNumbers = Object.keys(sales).sort();
+        sortedNumbers.forEach(number => {
+            if (sales[number] > 0) {
+                reportContent += `${number},${sales[number]}\n`;
+            }
+        });
+
+        // Agregar console.log para depuración
+        console.log(`Reporte de ${type} generado:`, reportContent);
+
+        Android.shareReportFromAndroid(reportContent, type);
+    }
+
+
+    // Función para verificar tickets ganadores
+    function checkWinningTickets() {
+        console.log("Iniciando verificación de tickets ganadores");
+
+        const firstPrize = document.getElementById('firstPrize').value.trim();
+        const secondPrize = document.getElementById('secondPrize').value.trim();
+        const thirdPrize = document.getElementById('thirdPrize').value.trim();
+
+        if (!firstPrize || !secondPrize || !thirdPrize) {
+            alert("Por favor, ingrese los números ganadores.");
+            return;
+        }
+
+        // Obtener los valores de los filtros - USAR IDs CORRECTOS
+        const filterDateInput = document.getElementById('winnersFilterDate').value;
+        const filterLottery = document.getElementById('filterLottery').value;
+        const filterDrawTime = document.getElementById('filterDrawTime').value;
+
+        console.log("Filtros seleccionados:", {
+            fecha: filterDateInput,
+            loteria: filterLottery,
+            horaSorteo: filterDrawTime
+        });
+
+        // Si no hay ningún filtro seleccionado, mostrar una advertencia
+        if (!filterDateInput && !filterLottery && !filterDrawTime) {
+            if (!confirm("No ha seleccionado ningún filtro. ¿Desea verificar TODOS los tickets existentes?")) {
+                return;
+            }
+        }
+
+        const tickets = loadTickets();
+        console.log("Total de tickets cargados:", tickets.length);
+
+        let filteredTickets = [...tickets]; // Crear una copia para no modificar el original
+
+        // Aplicar filtro de fecha - CORRECCIÓN IMPLEMENTADA AQUÍ
+        if (filterDateInput) {
+            console.log("Filtrando por fecha:", filterDateInput);
+
+            filteredTickets = filteredTickets.filter(ticket => {
+                // Convertir la fecha del ticket a formato local para evitar problemas de zona horaria
+                const ticketDate = new Date(ticket.datetime);
+
+                // Extraer componentes de fecha en la zona horaria local
+                const ticketYear = ticketDate.getFullYear();
+                const ticketMonth = String(ticketDate.getMonth() + 1).padStart(2, '0');
+                const ticketDay = String(ticketDate.getDate()).padStart(2, '0');
+                const ticketDateStr = `${ticketYear}-${ticketMonth}-${ticketDay}`;
+
+                // Comparar con la fecha del filtro
+                const coincide = ticketDateStr === filterDateInput;
+
+                if (coincide) {
+                    console.log("Ticket coincide con fecha:", ticket.id, ticketDateStr);
+                }
+
+                return coincide;
+            });
+        }
+
+        console.log("Tickets después de filtrar por fecha:", filteredTickets.length);
+
+        // Aplicar filtro de lotería
+        if (filterLottery) {
+            console.log("Filtrando por lotería:", filterLottery);
+            filteredTickets = filteredTickets.filter(ticket => ticket.lottery === filterLottery);
+        }
+
+        console.log("Tickets después de filtrar por lotería:", filteredTickets.length);
+
+        // Aplicar filtro de hora de sorteo
+        if (filterDrawTime) {
+            console.log("Filtrando por hora de sorteo:", filterDrawTime);
+            filteredTickets = filteredTickets.filter(ticket => ticket.drawTime === filterDrawTime);
+        }
+
+        console.log("Tickets después de filtrar por hora de sorteo:", filteredTickets.length);
+
+        // Mostrar mensaje si no hay tickets que coincidan con los filtros
+        if (filteredTickets.length === 0) {
+            alert("No hay tickets que coincidan con los filtros seleccionados.");
+            return;
+        }
+
+        // Buscar tickets ganadores entre los tickets filtrados
+        const winningTickets = [];
+
+        filteredTickets.forEach(ticket => {
+            ticket.numbers.forEach(num => {
+                const ticketNumber = num.number;
+                let isPrize = false;
+                let prizeType = '';
+
+                if (ticketNumber === firstPrize) {
+                    isPrize = true;
+                    prizeType = '1er Premio';
+                } else if (ticketNumber === secondPrize) {
+                    isPrize = true;
+                    prizeType = '2do Premio';
+                } else if (ticketNumber === thirdPrize) {
+                    isPrize = true;
+                    prizeType = '3er Premio';
+                }
+
+                if (isPrize) {
+                    // Formatear la fecha en un formato legible
+                    const ticketDate = new Date(ticket.datetime);
+                    const formattedDate = `${ticketDate.getDate()}/${ticketDate.getMonth() + 1}/${ticketDate.getFullYear()}`;
+
+                    winningTickets.push({
+                        id: ticket.id,
+                        lottery: ticket.lottery,
+                        drawTime: ticket.drawTime,
+                        date: formattedDate,
+                        number: ticketNumber,
+                        pieces: num.pieces,
+                        prize: prizeType
+                    });
+
+                    console.log("Ticket ganador encontrado:", {
+                        id: ticket.id,
+                        fecha: formattedDate,
+                        loteria: ticket.lottery,
+                        horaSorteo: ticket.drawTime,
+                        numero: ticketNumber,
+                        premio: prizeType
+                    });
+                }
+            });
+        });
+
+        if (winningTickets.length > 0) {
+            console.log("Total tickets ganadores encontrados:", winningTickets.length);
+            displayWinningTickets(winningTickets);
+        } else {
+            alert("No hay tickets ganadores con los números ingresados en los filtros seleccionados.");
+        }
+    }
+
+
+    // Función para mostrar los tickets ganadores
+    function displayWinningTickets(winningTickets) {
+        const resultDiv = document.getElementById('winningTicketsResult');
+        resultDiv.innerHTML = `
+            <h3>Tickets Ganadores</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ccc; padding: 8px;">ID Ticket</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Fecha</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Lotería</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Hora Sorteo</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Número</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Tiempos</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Premio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${winningTickets.map(ticket => `
+                        <tr>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.id}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.date}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.lottery}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.drawTime || 'N/A'}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.number}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.pieces}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.prize}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    function applyWinnerFilters() {
+        const filterDate = document.getElementById('winnersFilterDate').value; // Usar el ID correcto
+        const filterLottery = document.getElementById('filterLottery').value;
+        const filterDrawTime = document.getElementById('filterDrawTime').value;
+
+
+        const tickets = loadTickets();
+        const filteredTickets = tickets.filter(ticket => {
+            const ticketDate = new Date(ticket.datetime).toISOString().split('T')[0];
+            return (!filterDate || ticketDate === filterDate) &&
+                   (!filterLottery || ticket.lottery === filterLottery) &&
+                   (!filterDrawTime || ticket.drawTime === filterDrawTime);
+        });
+
+        if (filteredTickets.length > 0) {
+            displayFilteredTickets(filteredTickets);
+        } else {
+            alert("No hay tickets que coincidan con los filtros seleccionados.");
+        }
+    }
+
+    function displayFilteredTickets(filteredTickets) {
+        const resultDiv = document.createElement('div');
+        resultDiv.innerHTML = `
+            <h3>Tickets Filtrados</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ccc; padding: 8px;">ID Ticket</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Fecha</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Lotería</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Hora de Sorteo</th>
+                        <th style="border: 1px solid #ccc; padding: 8px;">Números</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filteredTickets.map(ticket => `
+                        <tr>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.id}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${new Date(ticket.datetime).toLocaleDateString()}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.lottery}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">${ticket.drawTime || 'N/A'}</td>
+                            <td style="border: 1px solid #ccc; padding: 8px;">
+                                ${ticket.numbers.map(num => `${num.number} (${num.pieces}T)`).join(', ')}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        // Mostrar el resultado en la página
+        const mainPage = document.getElementById('mainPage');
+        mainPage.appendChild(resultDiv);
+    }
+
+    // Función para mostrar la página de verificación de ganadores
+    function showVerifyWinnersPage() {
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('salesPage').style.display = 'none';
+        document.getElementById('numberSalesPage').style.display = 'none';
+        document.getElementById('verifyWinnersPage').style.display = 'block';
+        document.getElementById('winningTicketsResult').innerHTML = ''; // Limpiar resultados anteriores
+
+        // Agregar evento de cambio al selector de lotería
+        document.getElementById('filterLottery').onchange = updateWinnerDrawTimes;
+
+        // Inicializar las horas de sorteo
+        updateWinnerDrawTimes();
+
+        // Resetear los campos de premios
+        document.getElementById('firstPrize').value = '';
+        document.getElementById('secondPrize').value = '';
+        document.getElementById('thirdPrize').value = '';
+
+        // Establecer la fecha actual como valor predeterminado
+        if (!document.getElementById('winnersFilterDate').value) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('winnersFilterDate').value = `${year}-${month}-${day}`;
+        }
+    }
+
+    // Función para volver a la página principal
+    function showMainPage() {
+        // Ocultar todas las páginas excepto la principal
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('salesPage').style.display = 'none';
+        document.getElementById('numberSalesPage').style.display = 'none';
+        document.getElementById('verifyWinnersPage').style.display = 'none';
+        document.getElementById('configPage').style.display = 'none';
+
+        // Mostrar la página principal
+        document.getElementById('mainPage').style.display = 'block';
+
+        // Solo limpiamos los campos de entrada de números, pero mantenemos la lotería y hora
+        document.getElementById('number').value = '';
+        document.getElementById('pieces').value = '';
+        document.getElementById('quickInput').value = '';
+    }
+
+    function resetMainPage() {
+        // Limpiar solo los campos específicos, pero NO reiniciar lotería ni hora
+        document.getElementById('customerName').value = '';
+        document.getElementById('number').value = '';
+        document.getElementById('pieces').value = '';
+        document.getElementById('quickInput').value = '';
+
+        // No reiniciar la lista de números si ya hay números copiados
+        if (numbers.length === 0) {
+            document.getElementById('numbersTableBody').innerHTML = ''; // Limpiar la tabla de números
+            document.getElementById('totalValue').innerText = 'VALOR DE TICKET: 0.00$'; // Reiniciar el total
+        }
+
+        // NO incluir estas líneas que reinician los selectores:
+        // document.getElementById('lotteryType').selectedIndex = 0;
+        // document.getElementById('drawTimeSelect').selectedIndex = 0;
+        // document.getElementById('drawTimeSelect').disabled = true;
+    }
+
+    function updateWinnerDrawTimes() {
+        const lotteryType = document.getElementById('filterLottery').value;
+        const timeSelect = document.getElementById('filterDrawTime');
+
+        // Reiniciar las opciones
+        timeSelect.innerHTML = '<option value="">Todas las Horas</option>';
+
+        if (lotteryType && lotteryType !== 'PANAMA') {
+            timeSelect.disabled = false;
+            // Agregar las horas específicas para la lotería seleccionada
+            if (lotteryTimes[lotteryType]) {
+                lotteryTimes[lotteryType].forEach(time => {
+                    timeSelect.innerHTML += `<option value="${time}">${time}</option>`;
+                });
+            }
+        } else {
+            timeSelect.disabled = true;
+        }
+    }
+
+    let activeTab = 'tiempos';
+
+    // Función para cambiar entre las pestañas de tiempos y billetes
+    function switchTab(tabName) {
+        activeTab = tabName;
+
+        // Actualizar estilos de las pestañas
+        document.getElementById('tiemposTab').classList.toggle('active', tabName === 'tiempos');
+        document.getElementById('billetesTab').classList.toggle('active', tabName === 'billetes');
+
+        // Mostrar/ocultar los contenedores correspondientes
+        document.getElementById('tiemposContainer').style.display = tabName === 'tiempos' ? 'block' : 'none';
+        document.getElementById('billetesContainer').style.display = tabName === 'billetes' ? 'block' : 'none';
+
+        // Actualizar la visualización
+        applyFilters();
+    }
+
+    function updateBilletesSalesTable() {
+        const tickets = loadTickets();
+        const filterLottery = document.getElementById('filterLotteryType').value;
+        const filterTime = document.getElementById('filterDrawTimeSelect').value;
+        const filterDate = document.getElementById('salesFilterDate').value;
+
+        // Inicializar un objeto para contar los tiempos vendidos por billete
+        const billetesSales = {};
+
+        // Crear objetos Date para el rango del día seleccionado si hay un filtro de fecha
+        let selectedDateStart = null;
+        let selectedDateEnd = null;
+
+        if (filterDate) {
+            selectedDateStart = new Date(filterDate + 'T00:00:00');
+            selectedDateEnd = new Date(filterDate + 'T23:59:59');
+        }
+
+        // Filtrar y contar los billetes vendidos
+        tickets.forEach(ticket => {
+            // Convertir la fecha del ticket a un objeto Date para comparación
+            const ticketDate = new Date(ticket.datetime);
+
+            // Verificar si pasa los filtros
+            let passesFilters = true;
+
+            // Filtro de lotería
+            if (filterLottery && ticket.lottery !== filterLottery) {
+                passesFilters = false;
+            }
+
+            // Filtro de hora de sorteo
+            if (filterTime && ticket.drawTime !== filterTime) {
+                passesFilters = false;
+            }
+
+            // Filtro de fecha - comparar objetos Date para incluir horas
+            if (filterDate && (ticketDate < selectedDateStart || ticketDate > selectedDateEnd)) {
+                passesFilters = false;
+            }
+
+            // Si pasa todos los filtros, contar los billetes vendidos
+            if (passesFilters) {
+                ticket.numbers.forEach(num => {
+                    if (num.number.length === 4) { // Solo contar números de 4 cifras (billetes)
+                        if (!billetesSales[num.number]) {
+                            billetesSales[num.number] = 0;
+                        }
+                        billetesSales[num.number] += parseInt(num.pieces, 10);
+                    }
+                });
+            }
+        });
+
+        // Mostrar los resultados en la cuadrícula
+        const grid = document.getElementById('billetesSalesGrid');
+        grid.innerHTML = '';
+
+        // Ordenar los billetes por número para mostrarlos organizados
+        const sortedBilletes = Object.keys(billetesSales).sort();
+
+        // Verificar si no hay billetes para mostrar
+        if (sortedBilletes.length === 0) {
+            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;">No hay billetes vendidos con los filtros seleccionados</div>';
+            return;
+        }
+
+        // Recorrer los billetes y mostrarlos en la cuadrícula
+        sortedBilletes.forEach(billete => {
+            if (billetesSales[billete] > 0) {
+                const billeteItem = document.createElement('div');
+                billeteItem.className = 'billete-item highlight';
+                billeteItem.innerHTML = `
+                    <span>${billete}</span>
+                    <span>${billetesSales[billete]}</span>
+                `;
+                grid.appendChild(billeteItem);
+            }
+        });
+    }
+
+
+    function iniciarEscaner() {
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader",
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            },
+            /* verbose= */ false
+        );
+
+        html5QrcodeScanner.render((decodedText) => {
+            const tickets = loadTickets();
+            const ticket = tickets.find(t => t.id === decodedText);
+            if (ticket) {
+                html5QrcodeScanner.clear();
+                document.getElementById('scannerContainer').style.display = 'none';
+                verificarTicket(ticket);
+            } else {
+                alert('Ticket no encontrado');
+            }
+        });
+    }
+
+    // Variables para almacenar los límites
+    let salesLimits = {
+        chances: {}, // Límites para números de 2 cifras
+        billetes: {} // Límites para números de 4 cifras
+    };
+
+    // Almacenar ventas actuales
+    let currentSales = {
+        chances: {}, // Ventas actuales para números de 2 cifras por lotería y sorteo
+        billetes: {} // Ventas actuales para números de 4 cifras por lotería y sorteo
+    };
+
+    // Inicializar límites y ventas actuales desde localStorage
+    function initLimitsAndSales() {
+        const savedLimits = localStorage.getItem('lotteryLimits');
+        if (savedLimits) {
+            salesLimits = JSON.parse(savedLimits);
+        }
+
+        // Inicializar las ventas actuales basadas en los tickets guardados
+        calculateCurrentSales();
+
+        // Mostrar límites actuales si estamos en la página de configuración
+        if (document.getElementById('configPage').style.display !== 'none') {
+            displayCurrentLimits('chances');
+            displayCurrentLimits('billetes');
+        }
+    }
+
+    // Calcular ventas actuales basadas en los tickets guardados
+    function calculateCurrentSales() {
+        currentSales = {
+            chances: {},
+            billetes: {}
+        };
+
+        const tickets = loadTickets();
+        console.log("Total de tickets cargados:", tickets.length);
+
+        // Obtener la fecha actual en formato local YYYY-MM-DD
+        const today = new Date();
+        const todayYear = today.getFullYear();
+        const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+        const todayDay = String(today.getDate()).padStart(2, '0');
+        const todayString = `${todayYear}-${todayMonth}-${todayDay}`;
+
+        console.log("Fecha actual:", todayString);
+
+        // Solo contar tickets no pagados (que aún están activos) Y que sean del día de hoy
+        const activeTickets = tickets.filter(ticket => {
+            const ticketDate = new Date(ticket.datetime);
+            const ticketYear = ticketDate.getFullYear();
+            const ticketMonth = String(ticketDate.getMonth() + 1).padStart(2, '0');
+            const ticketDay = String(ticketDate.getDate()).padStart(2, '0');
+            const ticketDateString = `${ticketYear}-${ticketMonth}-${ticketDay}`;
+
+            const isToday = ticketDateString === todayString;
+            const isNotPaid = !ticket.paid;
+
+            console.log(`Ticket ${ticket.id}: fecha=${ticketDateString}, es hoy=${isToday}, no pagado=${isNotPaid}`);
+
+            return isNotPaid && isToday;
+        });
+
+        console.log(`Tickets activos para hoy (${todayString}):`, activeTickets.length);
+        console.log("Tickets que se contarán para límites:", activeTickets);
+
+        activeTickets.forEach(ticket => {
+            const lottery = ticket.lottery;
+            const drawTime = ticket.drawTime || 'default';
+            const key = `${lottery}_${drawTime}`;
+
+            ticket.numbers.forEach(num => {
+                const number = num.number;
+                const pieces = parseInt(num.pieces, 10);
+
+                if (number.length === 2) { // Chances (2 cifras)
+                    if (!currentSales.chances[key]) {
+                        currentSales.chances[key] = {};
+                    }
+                    if (!currentSales.chances[key][number]) {
+                        currentSales.chances[key][number] = 0;
+                    }
+                    currentSales.chances[key][number] += pieces;
+                    console.log(`Sumando ${pieces} tiempos para el chance ${number}, total: ${currentSales.chances[key][number]}`);
+                } else if (number.length === 4) { // Billetes (4 cifras)
+                    if (!currentSales.billetes[key]) {
+                        currentSales.billetes[key] = {};
+                    }
+                    if (!currentSales.billetes[key][number]) {
+                        currentSales.billetes[key][number] = 0;
+                    }
+                    currentSales.billetes[key][number] += pieces;
+                    console.log(`Sumando ${pieces} tiempos para el billete ${number}, total: ${currentSales.billetes[key][number]}`);
+                }
+            });
+        });
+
+        console.log("Ventas actuales calculadas:", currentSales);
+    }
+
+    // Función para reiniciar las ventas actuales (útil para depuración)
+    function resetCurrentSales() {
+        currentSales = {
+            chances: {},
+            billetes: {}
+        };
+        console.log("Ventas actuales reiniciadas manualmente");
+        alert("Ventas actuales reiniciadas manualmente");
+    }
+
+    // Mostrar la página de configuración
+    function showConfigPage() {
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('salesPage').style.display = 'none';
+        document.getElementById('numberSalesPage').style.display = 'none';
+        document.getElementById('verifyWinnersPage').style.display = 'none';
+        document.getElementById('configPage').style.display = 'block';
+
+        // Actualizar los selectores de hora para los límites
+        updateLimitDrawTimes();
+        updateLimitBilleteDrawTimes();
+
+        // Mostrar límites actuales
+        displayCurrentLimits('chances');
+        displayCurrentLimits('billetes');
+    }
+
+    // Cambiar entre pestañas de límites
+    function switchLimitTab(tab) {
+        // Actualizar estilos de las pestañas
+        document.getElementById('chancesLimitTab').classList.toggle('active', tab === 'chances');
+        document.getElementById('billetesLimitTab').classList.toggle('active', tab === 'billetes');
+
+        // Mostrar/ocultar los contenedores correspondientes
+        document.getElementById('chancesLimitContainer').style.display = tab === 'chances' ? 'block' : 'none';
+        document.getElementById('billetesLimitContainer').style.display = tab === 'billetes' ? 'block' : 'none';
+
+        // Mostrar límites actuales
+        displayCurrentLimits(tab);
+    }
+
+    // Actualizar selectores de hora para límites (chances)
+    function updateLimitDrawTimes() {
+        const lotteryType = document.getElementById('limitLotteryType').value;
+        const timeSelect = document.getElementById('limitDrawTimeSelect');
+        timeSelect.innerHTML = '<option value="">Seleccione hora de sorteo</option>';
+
+        if (lotteryType && lotteryType !== 'PANAMA') {
+            timeSelect.disabled = false;
+            lotteryTimes[lotteryType].forEach(time => {
+                timeSelect.innerHTML += `<option value="${time}">${time}</option>`;
+            });
+        } else {
+            timeSelect.disabled = true;
+        }
+    }
+
+    // Actualizar selectores de hora para límites (billetes)
+    function updateLimitBilleteDrawTimes() {
+        const lotteryType = document.getElementById('limitBilleteLotteryType').value;
+        const timeSelect = document.getElementById('limitBilleteDrawTimeSelect');
+        timeSelect.innerHTML = '<option value="">Seleccione hora de sorteo</option>';
+
+        if (lotteryType && lotteryType !== 'PANAMA') {
+            timeSelect.disabled = false;
+            lotteryTimes[lotteryType].forEach(time => {
+                timeSelect.innerHTML += `<option value="${time}">${time}</option>`;
+            });
+        } else {
+            timeSelect.disabled = true;
+        }
+    }
+
+    // Establecer límite global para todos los números
+    function setGlobalLimit(type) {
+        let lottery, drawTime, globalLimit, key;
+
+        if (type === 'chances') {
+            lottery = document.getElementById('limitLotteryType').value;
+            drawTime = document.getElementById('limitDrawTimeSelect').value || 'default';
+            globalLimit = parseInt(document.getElementById('globalChancesLimit').value, 10);
+        } else if (type === 'billetes') {
+            lottery = document.getElementById('limitBilleteLotteryType').value;
+            drawTime = document.getElementById('limitBilleteDrawTimeSelect').value || 'default';
+            globalLimit = parseInt(document.getElementById('globalBilletesLimit').value, 10);
+        }
+
+        if (!lottery) {
+            alert('Por favor seleccione una lotería');
+            return;
+        }
+
+        if (isNaN(globalLimit) || globalLimit < 0) {
+            alert('Por favor ingrese un límite válido (número positivo)');
+            return;
+        }
+
+        key = `${lottery}_${drawTime}`;
+
+        // Inicializar el objeto de límites si no existe
+        if (type === 'chances') {
+            if (!salesLimits.chances[key]) {
+                salesLimits.chances[key] = {
+                    globalLimit: 0,
+                    numbers: {}
+                };
+            }
+            salesLimits.chances[key].globalLimit = globalLimit;
+        } else if (type === 'billetes') {
+            if (!salesLimits.billetes[key]) {
+                salesLimits.billetes[key] = {
+                    globalLimit: 0,
+                    numbers: {}
+                };
+            }
+            salesLimits.billetes[key].globalLimit = globalLimit;
+        }
+
+        // Guardar en localStorage
+        localStorage.setItem('lotteryLimits', JSON.stringify(salesLimits));
+
+        // Actualizar visualización de límites actuales
+        displayCurrentLimits(type);
+
+        const typeText = type === 'chances' ? 'chances' : 'billetes';
+        alert(`Límite global de ${globalLimit} tiempos establecido para cada ${typeText} de ${lottery} - ${drawTime || 'Todos los sorteos'}`);
+    }
+
+    // Establecer límite individual para un número específico
+    function setIndividualLimit(type) {
+        let lottery, drawTime, number, limit, key;
+
+        if (type === 'chances') {
+            lottery = document.getElementById('limitLotteryType').value;
+            drawTime = document.getElementById('limitDrawTimeSelect').value || 'default';
+            number = document.getElementById('chanceNumber').value.padStart(2, '0');
+            limit = parseInt(document.getElementById('chanceLimit').value, 10);
+
+            if (!lottery) {
+                alert('Por favor seleccione una lotería');
+                return;
+            }
+
+            if (!number || number.length !== 2 || isNaN(parseInt(number, 10))) {
+                alert('Por favor ingrese un número válido de 2 cifras (00-99)');
+                return;
+            }
+
+        } else if (type === 'billetes') {
+            lottery = document.getElementById('limitBilleteLotteryType').value;
+            drawTime = document.getElementById('limitBilleteDrawTimeSelect').value || 'default';
+            number = document.getElementById('billeteNumber').value.padStart(4, '0');
+            limit = parseInt(document.getElementById('billeteLimit').value, 10);
+
+            if (!lottery) {
+                alert('Por favor seleccione una lotería');
+                return;
+            }
+
+            if (!number || number.length !== 4 || isNaN(parseInt(number, 10))) {
+                alert('Por favor ingrese un número válido de 4 cifras (0000-9999)');
+                return;
+            }
+        }
+
+        if (isNaN(limit) || limit < 0) {
+            alert('Por favor ingrese un límite válido (número positivo)');
+            return;
+        }
+
+        key = `${lottery}_${drawTime}`;
+
+        // Inicializar el objeto de límites si no existe
+        if (type === 'chances') {
+            if (!salesLimits.chances[key]) {
+                salesLimits.chances[key] = {
+                    globalLimit: 0,
+                    numbers: {}
+                };
+            }
+            // Asegurarse de que exista el objeto numbers
+            if (!salesLimits.chances[key].numbers) {
+                salesLimits.chances[key].numbers = {};
+            }
+            salesLimits.chances[key].numbers[number] = limit;
+        } else if (type === 'billetes') {
+            if (!salesLimits.billetes[key]) {
+                salesLimits.billetes[key] = {
+                    globalLimit: 0,
+                    numbers: {}
+                };
+            }
+            // Asegurarse de que exista el objeto numbers
+            if (!salesLimits.billetes[key].numbers) {
+                salesLimits.billetes[key].numbers = {};
+            }
+            salesLimits.billetes[key].numbers[number] = limit;
+        }
+
+        // Guardar en localStorage
+        localStorage.setItem('lotteryLimits', JSON.stringify(salesLimits));
+
+        // Actualizar visualización de límites actuales
+        displayCurrentLimits(type);
+
+        // Limpiar los campos después de establecer el límite
+        if (type === 'chances') {
+            document.getElementById('chanceNumber').value = '';
+            document.getElementById('chanceLimit').value = '';
+        } else {
+            document.getElementById('billeteNumber').value = '';
+            document.getElementById('billeteLimit').value = '';
+        }
+
+        alert(`Límite de ${limit} tiempos establecido para el número ${number} - ${lottery} - ${drawTime || 'Todos los sorteos'}`);
+    }
+
+    // Mostrar límites actuales
+    function displayCurrentLimits(type) {
+        const container = document.getElementById(type === 'chances' ? 'currentChancesLimits' : 'currentBilletesLimits');
+        container.innerHTML = '';
+
+        // Obtener la categoría correcta de límites
+        const limits = type === 'chances' ? salesLimits.chances : salesLimits.billetes;
+
+        // Si no hay límites configurados
+        if (!limits || Object.keys(limits).length === 0) {
+            container.innerHTML = '<p>No hay límites configurados actualmente.</p>';
+            return;
+        }
+
+        // Generar contenido HTML para mostrar los límites
+        let html = '';
+
+        for (const key in limits) {
+            const [lottery, drawTime] = key.split('_');
+            html += `<div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">`;
+            html += `<h5>${lottery} - ${drawTime === 'default' ? 'Todos los sorteos' : drawTime}</h5>`;
+
+            // Mostrar límite global
+            if (limits[key].globalLimit) {
+                html += `<p><strong>Límite Global para cada número:</strong> ${limits[key].globalLimit} tiempos</p>`;
+            }
+
+            // Mostrar límites individuales
+            const numbers = limits[key].numbers || {};
+            if (Object.keys(numbers).length > 0) {
+                html += `<p><strong>Límites Individuales:</strong></p>`;
+                html += `<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;">`;
+
+                for (const number in numbers) {
+                    html += `<div style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                        ${number}: ${numbers[number]}
+                    </div>`;
+                }
+
+                html += `</div>`;
+            } else {
+                html += `<p>No hay límites individuales configurados.</p>`;
+            }
+
+            // Botón para eliminar configuración de esta lotería y sorteo
+            html += `<button onclick="removeLimitConfig('${type}', '${key}')"
+                      style="margin-top: 10px; background-color: #ff4d4d; color: white;">
+                      Eliminar Configuración
+                    </button>`;
+
+            html += `</div>`;
+        }
+
+        container.innerHTML = html;
+    }
+    // Eliminar configuración de límites para una lotería y sorteo específicos
+    function removeLimitConfig(type, key) {
+        if (confirm('¿Está seguro de eliminar esta configuración de límites?')) {
+            if (type === 'chances') {
+                delete salesLimits.chances[key];
+            } else {
+                delete salesLimits.billetes[key];
+            }
+
+            // Guardar en localStorage
+            localStorage.setItem('lotteryLimits', JSON.stringify(salesLimits));
+
+            // Actualizar visualización
+            displayCurrentLimits(type);
+        }
+    }
+
+    // Guardar configuración y volver a la página principal
+    function saveConfigAndReturn() {
+        // La configuración ya se ha guardado en cada cambio
+        // Ocultar explícitamente la página de configuración
+        document.getElementById('configPage').style.display = 'none';
+
+        // Llamar a la función para mostrar la página principal
+        showMainPage();
+    }
+
+    // Verificar límites antes de agregar un número
+    function checkLimits(number, pieces) {
+        const lotteryType = document.getElementById('lotteryType').value;
+        const drawTime = document.getElementById('drawTimeSelect').value || 'default';
+        const key = `${lotteryType}_${drawTime}`;
+
+        // Determinar si es un chance (2 cifras) o un billete (4 cifras)
+        const isChance = number.length === 2;
+        const type = isChance ? 'chances' : 'billetes';
+        const limits = isChance ? salesLimits.chances[key] : salesLimits.billetes[key];
+
+        // Si no hay límites configurados para esta lotería y sorteo, permitir la venta
+        if (!limits) {
+            return true;
+        }
+
+        // Obtener ventas actuales
+        if (!currentSales[type][key]) {
+            currentSales[type][key] = {};
+        }
+        const currentNumberSales = currentSales[type][key][number] || 0;
+
+        // Verificar límite individual para este número específico
+        if (limits.numbers && limits.numbers[number] !== undefined) {
+            // Tenemos un límite específico para este número
+            const limit = limits.numbers[number];
+            if (currentNumberSales + pieces > limit) {
+                alert(`¡Límite excedido! Solo puede vender ${limit} tiempos del número ${number} y ya ha vendido ${currentNumberSales}.`);
+                return false;
+            }
+        } else if (limits.globalLimit) {
+            // No hay límite específico, pero hay un límite global para todos los números de este tipo
+            // Este límite global se aplica a cada número individualmente
+            if (currentNumberSales + pieces > limits.globalLimit) {
+                alert(`¡Límite excedido! Solo puede vender ${limits.globalLimit} tiempos del número ${number} y ya ha vendido ${currentNumberSales}.`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Establecer límite global para billetes (4 cifras)
+    function setGlobalBilletesLimit() {
+        const lottery = document.getElementById('limitBilleteLotteryType').value;
+        const drawTime = document.getElementById('limitBilleteDrawTimeSelect').value || 'default';
+        const globalLimit = parseInt(document.getElementById('globalBilletesLimit').value, 10);
+
+        if (!lottery) {
+            alert('Por favor seleccione una lotería');
+            return;
+        }
+
+        if (isNaN(globalLimit) || globalLimit < 0) {
+            alert('Por favor ingrese un límite válido (número positivo)');
+            return;
+        }
+
+        const key = `${lottery}_${drawTime}`;
+
+        // Inicializar el objeto de límites si no existe
+        if (!salesLimits.billetes[key]) {
+            salesLimits.billetes[key] = {
+                globalLimit: 0
+            };
+        }
+
+        // Establecer el límite global
+        salesLimits.billetes[key].globalLimit = globalLimit;
+
+        // Guardar en localStorage
+        localStorage.setItem('lotteryLimits', JSON.stringify(salesLimits));
+
+        // Actualizar visualización de límites actuales
+        displayCurrentLimits('billetes');
+
+        alert(`Límite global de ${globalLimit} tiempos establecido para billetes de ${lottery} - ${drawTime || 'Todos los sorteos'}`);
+    }
+
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('data:application/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4ge30pO3NlbGYuYWRkRXZlbnRMaXN0ZW5lcignZmV0Y2gnLCBldmVudCA9PiB7fSk7')
+            .then(() => console.log('Service Worker Registered'))
+            .catch(error => console.log('Service Worker Registration Failed:', error));
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+    });
+</script>
+</body>
+</html>
