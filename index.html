@@ -338,16 +338,17 @@
         </div>
     </div>
 
-    <!-- Número y pedazos en una fila -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <div class="input-group">
-            <input type="number" id="number" placeholder="NUMERO">
-        </div>
-        <div class="input-group">
-            <input type="number" id="pieces" placeholder="TIEMPOS">
-        </div>
+  <!-- Reemplaza el campo de entrada con este: -->
+<div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end;">
+    <div class="input-group" style="flex-grow: 1;">
+        <input type="text" id="number" 
+               placeholder="Ej: 234 (23×4) | 2350 (23×50) | 23457 (2345×7) | 234550 (2345×50)" 
+               style="padding: 12px; font-size: 14px;">
     </div>
-    <button onclick="addNumber()">AGREGAR</button>
+    <button onclick="addNumberRapid()" style="width: auto; padding: 12px 20px; margin-bottom: 0;">
+        AGREGAR
+    </button>
+</div>
 
     <!-- Agregar este bloque justo después del campo de pedazos en la página principal -->
     <div style="margin-top: 15px; margin-bottom: 15px;">
@@ -953,53 +954,121 @@
 }
 
 
-    function addNumber() {
-        const number = document.getElementById('number').value;
-        const pieces = parseInt(document.getElementById('pieces').value, 10);
-        const lotteryType = document.getElementById('lotteryType').value;
+// Función mejorada para entrada rápida con tiempos flexibles
+function addNumberRapid() {
+    const input = document.getElementById('number').value.trim();
+    const lotteryType = document.getElementById('lotteryType').value;
 
-        if (!number || !pieces) {
-            alert('Por favor ingrese número y cantidad de pedazos');
+    if (!input) {
+        alert('Por favor ingrese un número');
+        return;
+    }
+
+    if (!lotteryType) {
+        alert('Por favor seleccione una lotería');
+        return;
+    }
+
+    // Verificar hora de sorteo para loterías que no sean PANAMA
+    if (lotteryType !== 'PANAMA') {
+        const drawTime = document.getElementById('drawTimeSelect').value;
+        if (!drawTime) {
+            alert('Por favor seleccione hora de sorteo');
             return;
         }
+    }
+
+    let number, pieces;
+
+    // Determinar el formato basado en la longitud del input
+    if (input.length >= 3 && input.length <= 5) {
+        // Para números de 2 cifras con tiempos de 1, 2 o 3 cifras
+        // Ejemplos: 234 (23+4), 2350 (23+50), 23100 (23+100)
+        number = input.substring(0, 2);
+        pieces = parseInt(input.substring(2), 10);
+        
+        // Validar que sea un número de 2 cifras válido
         if (!validateNumber(number)) {
-            alert('El número debe tener 2 o 4 cifras');
-            return;
-        }
-
-        // Verificar la lotería seleccionada
-        if (!lotteryType) {
-            alert('Por favor seleccione una lotería');
-            return;
-        }
-
-        // Verificar hora de sorteo para loterías que no sean PANAMA
-        if (lotteryType !== 'PANAMA') {
-            const drawTime = document.getElementById('drawTimeSelect').value;
-            if (!drawTime) {
-                alert('Por favor seleccione hora de sorteo');
+            // Si no es válido como número de 2 cifras, intentar como 4 cifras
+            if (input.length >= 5 && input.length <= 7) {
+                number = input.substring(0, 4);
+                pieces = parseInt(input.substring(4), 10);
+            } else {
+                showFormatError();
                 return;
             }
         }
-
-        // Verificar límites antes de agregar el número
-        if (!checkLimits(number, pieces)) {
-            return; // Si no pasa la verificación de límites, no agregar el número
+    } else if (input.length >= 5 && input.length <= 7) {
+        // Para números de 4 cifras con tiempos de 1, 2 o 3 cifras
+        // Ejemplos: 23457 (2345+7), 234550 (2345+50), 2345100 (2345+100)
+        number = input.substring(0, 4);
+        pieces = parseInt(input.substring(4), 10);
+        
+        // Validar que sea un número de 4 cifras válido
+        if (!validateNumber(number)) {
+            showFormatError();
+            return;
         }
-
-        // Ahora pasamos el tipo de lotería a calculatePrice
-        const subTotal = calculatePrice(number, pieces, lotteryType);
-
-        // También debes guardar el tipo de lotería en el objeto
-        numbers.push({ number, pieces, subTotal, lotteryType });
-
-        updateNumbersList();
-        updateTotal();
-        // Actualizar el contador de ventas actuales para este número
-        updateCurrentSales(number, pieces, true); // true indica que es una adición
-        document.getElementById('number').value = '';
-        document.getElementById('pieces').value = '';
+    } else {
+        showFormatError();
+        return;
     }
+
+    // Validar que los tiempos sean válidos
+    if (isNaN(pieces) || pieces <= 0) {
+        alert('Los tiempos deben ser un número positivo');
+        return;
+    }
+
+    // Verificar límites antes de agregar el número
+    if (!checkLimits(number, pieces)) {
+        return;
+    }
+
+    // Calcular el subtotal
+    const subTotal = calculatePrice(number, pieces, lotteryType);
+
+    // Agregar a la lista de números
+    numbers.push({ number, pieces, subTotal, lotteryType });
+
+    // Actualizar la interfaz
+    updateNumbersList();
+    updateTotal();
+    
+    // Actualizar el contador de ventas actuales
+    updateCurrentSales(number, pieces, true);
+    
+    // Limpiar el campo de entrada
+    document.getElementById('number').value = '';
+    
+    // Mensaje de confirmación en consola
+    console.log(`Agregado: ${number} con ${pieces} tiempos`);
+}
+
+// Función para mostrar el mensaje de error de formato
+function showFormatError() {
+    alert('Formato incorrecto. Ejemplos válidos:\n\n' +
+          '📋 NÚMEROS DE 2 CIFRAS:\n' +
+          '• 234 = número 23 con 4 tiempos\n' +
+          '• 2350 = número 23 con 50 tiempos\n' +
+          '• 23100 = número 23 con 100 tiempos\n\n' +
+          '📋 NÚMEROS DE 4 CIFRAS:\n' +
+          '• 23457 = número 2345 con 7 tiempos\n' +
+          '• 234550 = número 2345 con 50 tiempos\n' +
+          '• 2345100 = número 2345 con 100 tiempos');
+}
+
+// Agregar funcionalidad para presionar Enter
+document.addEventListener('DOMContentLoaded', function() {
+    const numberInput = document.getElementById('number');
+    if (numberInput) {
+        numberInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addNumberRapid();
+            }
+        });
+    }
+});
 
     // Actualizar contador de ventas actuales
     function updateCurrentSales(number, pieces, isAddition) {
