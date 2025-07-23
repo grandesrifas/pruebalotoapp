@@ -338,11 +338,14 @@
         </div>
     </div>
 
-  <!-- Reemplaza el campo de entrada con este: -->
+ <!-- Reemplaza el campo de entrada con este: -->
 <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end;">
     <div class="input-group" style="flex-grow: 1;">
-        <input type="text" id="number" 
-               placeholder="Ej: 234 (23×4) | 2350 (23×50) | 23457 (2345×7) | 234550 (2345×50)" 
+        <input type="number" 
+               id="number" 
+               inputmode="numeric" 
+               pattern="[0-9]*"
+               placeholder="Ej: 234 (23×4) | 2350 (23×50) | 23457 (2345×7)" 
                style="padding: 12px; font-size: 14px;">
     </div>
     <button onclick="addNumberRapid()" style="width: auto; padding: 12px 20px; margin-bottom: 0;">
