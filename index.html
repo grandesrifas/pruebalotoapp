@@ -298,6 +298,50 @@
     .ticket-item strong {
         color: #333; /* Color del texto en negrita */
     }
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #007bff;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #28a745;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
     </style>
 </head>
 <body>
@@ -338,20 +382,36 @@
         </div>
     </div>
 
- <!-- Reemplaza el campo de entrada con este: -->
+<!-- Switch para seleccionar tipo -->
+<div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px; gap: 15px;">
+    <span style="font-weight: bold; color: #007bff;">CHANCE</span>
+    <label class="switch">
+        <input type="checkbox" id="typeSwitch" onchange="updateInputMode()">
+        <span class="slider"></span>
+    </label>
+    <span style="font-weight: bold; color: #28a745;">BILLETE</span>
+</div>
+
+<!-- Indicador de modo arriba -->
+<div id="inputHint" style="text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; color: #007bff;">
+    Modo: CHANCE - Ingrese 2 cifras + tiempos (ej: 234 = 23 con 4 tiempos)
+</div>
+
+<!-- Campo de entrada con botón -->
 <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end;">
     <div class="input-group" style="flex-grow: 1;">
         <input type="number" 
                id="number" 
                inputmode="numeric" 
                pattern="[0-9]*"
-               placeholder="Ej: 234 (23×4) | 2350 (23×50) | 23457 (2345×7)" 
+               placeholder="Ej: 234 (23 con 4 tiempos)" 
                style="padding: 12px; font-size: 14px;">
     </div>
     <button onclick="addNumberRapid()" style="width: auto; padding: 12px 20px; margin-bottom: 0;">
         AGREGAR
     </button>
 </div>
+
 
     <!-- Agregar este bloque justo después del campo de pedazos en la página principal -->
     <div style="margin-top: 15px; margin-bottom: 15px;">
@@ -957,10 +1017,30 @@
 }
 
 
-// Función mejorada para entrada rápida con tiempos flexibles
+// Función para actualizar el modo de entrada
+function updateInputMode() {
+    const isChecked = document.getElementById('typeSwitch').checked;
+    const placeholder = document.getElementById('number');
+    const hint = document.getElementById('inputHint');
+    
+    if (isChecked) {
+        // Modo BILLETE (4 cifras)
+        placeholder.placeholder = "Ej:12345 = 1234x5tiempos";
+        hint.textContent = "Modo: BILLETE";
+        hint.style.color = "#28a745";
+    } else {
+        // Modo CHANCE (2 cifras)
+        placeholder.placeholder = "Ej:123 = 12x3tiempos";
+        hint.textContent = "Modo: CHANCE";
+        hint.style.color = "#007bff";
+    }
+}
+
+// Función mejorada para entrada rápida con switch
 function addNumberRapid() {
     const input = document.getElementById('number').value.trim();
     const lotteryType = document.getElementById('lotteryType').value;
+    const isTicketMode = document.getElementById('typeSwitch').checked; // true = BILLETE, false = CHANCE
 
     if (!input) {
         alert('Por favor ingrese un número');
@@ -983,38 +1063,36 @@ function addNumberRapid() {
 
     let number, pieces;
 
-    // Determinar el formato basado en la longitud del input
-    if (input.length >= 3 && input.length <= 5) {
-        // Para números de 2 cifras con tiempos de 1, 2 o 3 cifras
-        // Ejemplos: 234 (23+4), 2350 (23+50), 23100 (23+100)
-        number = input.substring(0, 2);
-        pieces = parseInt(input.substring(2), 10);
-        
-        // Validar que sea un número de 2 cifras válido
-        if (!validateNumber(number)) {
-            // Si no es válido como número de 2 cifras, intentar como 4 cifras
-            if (input.length >= 5 && input.length <= 7) {
-                number = input.substring(0, 4);
-                pieces = parseInt(input.substring(4), 10);
-            } else {
-                showFormatError();
+    if (isTicketMode) {
+        // Modo BILLETE - 4 cifras
+        if (input.length >= 5 && input.length <= 7) {
+            number = input.substring(0, 4);
+            pieces = parseInt(input.substring(4), 10);
+            
+            // Validar que sea un número de 4 cifras válido
+            if (number.length !== 4 || isNaN(parseInt(number, 10))) {
+                alert('Error: Para billetes debe ingresar 4 cifras + tiempos\n\nEjemplos:\n• 23457 = billete 2345 con 7 tiempos\n• 234550 = billete 2345 con 50 tiempos');
                 return;
             }
-        }
-    } else if (input.length >= 5 && input.length <= 7) {
-        // Para números de 4 cifras con tiempos de 1, 2 o 3 cifras
-        // Ejemplos: 23457 (2345+7), 234550 (2345+50), 2345100 (2345+100)
-        number = input.substring(0, 4);
-        pieces = parseInt(input.substring(4), 10);
-        
-        // Validar que sea un número de 4 cifras válido
-        if (!validateNumber(number)) {
-            showFormatError();
+        } else {
+            alert('Error: Para billetes debe ingresar 4 cifras + tiempos\n\nEjemplos:\n• 23457 = billete 2345 con 7 tiempos\n• 234550 = billete 2345 con 50 tiempos');
             return;
         }
     } else {
-        showFormatError();
-        return;
+        // Modo CHANCE - 2 cifras
+        if (input.length >= 3 && input.length <= 5) {
+            number = input.substring(0, 2);
+            pieces = parseInt(input.substring(2), 10);
+            
+            // Validar que sea un número de 2 cifras válido
+            if (number.length !== 2 || isNaN(parseInt(number, 10))) {
+                alert('Error: Para chances debe ingresar 2 cifras + tiempos\n\nEjemplos:\n• 234 = chance 23 con 4 tiempos\n• 2350 = chance 23 con 50 tiempos');
+                return;
+            }
+        } else {
+            alert('Error: Para chances debe ingresar 2 cifras + tiempos\n\nEjemplos:\n• 234 = chance 23 con 4 tiempos\n• 2350 = chance 23 con 50 tiempos');
+            return;
+        }
     }
 
     // Validar que los tiempos sean válidos
@@ -1045,20 +1123,8 @@ function addNumberRapid() {
     document.getElementById('number').value = '';
     
     // Mensaje de confirmación en consola
-    console.log(`Agregado: ${number} con ${pieces} tiempos`);
-}
-
-// Función para mostrar el mensaje de error de formato
-function showFormatError() {
-    alert('Formato incorrecto. Ejemplos válidos:\n\n' +
-          '📋 NÚMEROS DE 2 CIFRAS:\n' +
-          '• 234 = número 23 con 4 tiempos\n' +
-          '• 2350 = número 23 con 50 tiempos\n' +
-          '• 23100 = número 23 con 100 tiempos\n\n' +
-          '📋 NÚMEROS DE 4 CIFRAS:\n' +
-          '• 23457 = número 2345 con 7 tiempos\n' +
-          '• 234550 = número 2345 con 50 tiempos\n' +
-          '• 2345100 = número 2345 con 100 tiempos');
+    const type = isTicketMode ? 'BILLETE' : 'CHANCE';
+    console.log(`Agregado ${type}: ${number} con ${pieces} tiempos`);
 }
 
 // Agregar funcionalidad para presionar Enter
@@ -1071,6 +1137,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Inicializar el modo por defecto (CHANCE)
+    updateInputMode();
 });
 
     // Actualizar contador de ventas actuales
